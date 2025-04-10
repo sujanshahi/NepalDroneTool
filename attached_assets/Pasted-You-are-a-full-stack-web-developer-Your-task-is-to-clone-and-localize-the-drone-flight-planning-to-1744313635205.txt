@@ -1,0 +1,63 @@
+You are a full-stack web developer.
+
+Your task is to clone and localize the drone flight planning tool from https://nrc.canada.ca/en/drone-tool/, replicating its user interface, logic, and map-based functionalities, while adapting all regulatory and regional content to Nepalese drone laws and CAA Nepal guidelines.
+
+Project Scope:
+✅ Clone the full functionality and layout of the NRC drone tool, including:
+
+The map interface (centered and restricted to Nepal)
+
+Interactive airspace restrictions
+
+User-driven questions (intent, location type, altitude, etc.)
+
+Real-time response messages and regulatory advice based on user input
+
+✅ Map Implementation Requirements:
+
+Use Leaflet.js, Mapbox, or similar tools to recreate the interactive map
+
+Highlight Nepal's geographic territory only (strictly exclude Canada or global overlays)
+
+Display restricted airspace, controlled airspace, and no-fly zones in Nepal using mock or real datasets
+
+Mimic all layers and tooltips as shown in the Canadian tool
+
+Use mock geospatial data for airspace zones if real data is not publicly available
+
+✅ Localization for Nepal:
+
+Replace all Canada-specific content (provinces, laws, agencies) with Nepal Civil Aviation Authority equivalents
+
+Localize all dropdowns, questions, explanations, and results per CAA Nepal drone regulations
+
+Show localized terms and units (e.g., meters, altitude in AMSL, local languages in future)
+
+✅ Responsiveness and Usability:
+
+Must be fully responsive and mobile-friendly
+
+Design should be intuitive for Nepalese drone operators
+
+Include multilingual support placeholder (e.g., Nepali/English switcher)
+
+✅ Tech Stack Recommendations:
+
+Frontend: React.js (preferred), Tailwind CSS
+
+Mapping: Leaflet.js, Mapbox, or OpenLayers
+
+Backend: Optional for Phase 1 (static logic-based implementation)
+
+Hosting: GitHub Pages, Vercel, or Netlify
+
+✅ Scalability:
+
+Codebase should allow for easy expansion (e.g., drone registration system, real-time weather integration, user accounts)
+
+Use modular components and clear state management
+
+Constraints:
+🚫 Do NOT use any Canadian branding, emblems, or official government symbols
+🚫 Do NOT reference Canadian laws or transport agencies
+✅ Tool must be clearly customized for Nepalese drone pilots only
