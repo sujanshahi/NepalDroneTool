@@ -55,8 +55,7 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
         className="relative right-0 top-0 h-full w-full md:w-96 bg-white shadow-lg overflow-y-auto"
         style={{ 
           maxWidth: '100vw',
-          animation: 'slideIn 0.3s ease-out',
-          transform: 'translateX(0)'
+          animation: 'slideIn 0.3s ease-out'
         }}
       >
         <div className="sticky top-0 z-10 bg-white p-5 border-b border-gray-200">
@@ -180,17 +179,7 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
         </div>
       </div>
       
-      {/* Add slide-in animation styles */}
-      <style jsx global>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-      `}</style>
+      {/* Animation is handled through inline styles */}
     </div>
   );
 };

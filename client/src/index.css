@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animation for info drawer slide-in */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Glow effect for Nepal outline */
+.nepal-border-glow {
+  filter: drop-shadow(0 0 6px #DC143C);
+  animation: glowing 2s infinite alternate;
+}
+
+@keyframes glowing {
+  from { filter: drop-shadow(0 0 2px #DC143C); }
+  to { filter: drop-shadow(0 0 8px #DC143C); }
+}
+
 @layer base {
   * {
     @apply border-border;
