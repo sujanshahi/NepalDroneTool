@@ -6,6 +6,9 @@ import { setupAuth } from "./auth";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  setupAuth(app);
+  
   // API routes for the drone flight planner
   
   // Error handling middleware
@@ -191,6 +194,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create regulation with validated data
       const regulation = await storage.createRegulation(validatedData);
       res.status(201).json(regulation);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+
+  // Aircraft routes - all are protected and require authentication
+  app.get('/api/aircraft', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const userId = req.user?.id;
+      const aircraftList = await storage.getAircraftByUserId(userId);
+      res.json(aircraftList);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  app.post('/api/aircraft', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // Ensure aircraft belongs to authenticated user
+      const data = { ...req.body, userId: req.user?.id };
+      
+      // Validate request body against schema
+      const validatedData = insertAircraftSchema.parse(data);
+      
+      // Create aircraft with validated data
+      const aircraft = await storage.createAircraft(validatedData);
+      res.status(201).json(aircraft);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  app.get('/api/aircraft/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const aircraft = await storage.getAircraft(parseInt(req.params.id));
+      
+      if (!aircraft) {
+        return res.status(404).json({ error: "Aircraft not found" });
+      }
+      
+      // Ensure user can only access their own aircraft
+      if (aircraft.userId !== req.user?.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      res.json(aircraft);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  app.put('/api/aircraft/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const aircraft = await storage.getAircraft(id);
+      
+      if (!aircraft) {
+        return res.status(404).json({ error: "Aircraft not found" });
+      }
+      
+      // Ensure user can only update their own aircraft
+      if (aircraft.userId !== req.user?.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const updatedAircraft = await storage.updateAircraft(id, req.body);
+      res.json(updatedAircraft);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+  
+  app.delete('/api/aircraft/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const aircraft = await storage.getAircraft(id);
+      
+      if (!aircraft) {
+        return res.status(404).json({ error: "Aircraft not found" });
+      }
+      
+      // Ensure user can only delete their own aircraft
+      if (aircraft.userId !== req.user?.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const success = await storage.deleteAircraft(id);
+      res.status(204).end();
     } catch (error) {
       handleError(res, error);
     }

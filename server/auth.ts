@@ -11,7 +11,17 @@ import { pool } from "./db";
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Define the User interface for request.user
+    interface User {
+      id: number;
+      username: string;
+      password: string;
+      email: string | null;
+      fullName: string | null;
+      createdAt: string;
+      updatedAt: string;
+      role: string;
+    }
   }
 }
 
@@ -120,7 +130,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: any, user: Express.User | false, info: { message: string }) => {
       if (err) return next(err);
       
       if (!user) {
