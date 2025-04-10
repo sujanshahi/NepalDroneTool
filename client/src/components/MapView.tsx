@@ -10,7 +10,7 @@ import {
 import { airspaceZones } from '@/data/airspaceData';
 import { AirspaceZone, MapControls } from '@/lib/types';
 import { setupCustomMarkerIcon, createCircleZone, createPolygonZone, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
-import { Layers, HelpCircle, Focus } from 'lucide-react';
+import { Layers, HelpCircle, Focus, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = ({ onOpenInfoDrawer }) => {
@@ -18,6 +18,7 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   const markersLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
   const zonesLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
   const nepalOutlineRef = useRef<L.GeoJSON | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   
   const { flightPlan, updateLocation } = useFlightPlan();
   
@@ -30,6 +31,8 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
     },
     isDrawerOpen: false
   });
+  
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   // Initialize map on component mount
   useEffect(() => {
@@ -56,8 +59,12 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
           nepalOutlineRef.current = L.geoJSON(nepalFeature, {
             style: {
               color: '#003893',
-              weight: 2,
-              fillOpacity: 0
+              weight: 3,
+              fillOpacity: 0.1,
+              fillColor: '#DC143C',
+              opacity: 0.8,
+              dashArray: '5, 5',
+              className: 'nepal-border-glow'
             }
           }).addTo(map);
         })
@@ -83,6 +90,35 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       }
     };
   }, []);
+
+  // Add CSS for Nepal outline glow effect
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .nepal-border-glow {
+        filter: drop-shadow(0 0 6px #DC143C);
+        animation: glowing 2s infinite alternate;
+      }
+      @keyframes glowing {
+        from { filter: drop-shadow(0 0 2px #DC143C); }
+        to { filter: drop-shadow(0 0 8px #DC143C); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
+  // Update map size when fullscreen state changes
+  useEffect(() => {
+    if (mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 100);
+    }
+  }, [isFullScreen]);
   
   // Update map with airspace zones
   useEffect(() => {
@@ -106,7 +142,7 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       }
     });
     
-  }, [mapControls]);
+  }, [mapControls.layers]);
   
   // Update marker when location changes
   useEffect(() => {
@@ -205,8 +241,20 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
     onOpenInfoDrawer();
   };
   
+  // Toggle fullscreen mode
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+  };
+  
   return (
-    <div className="map-container w-full md:w-3/5 lg:w-2/3 bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+    <div 
+      ref={mapContainerRef}
+      className={`map-container bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ${
+        isFullScreen 
+          ? 'fixed inset-0 z-50 rounded-none' 
+          : 'w-full md:w-3/5 lg:w-2/3'
+      }`}
+    >
       <div className="p-3 border-b border-gray-200 flex justify-between items-center">
         <h2 className="font-heading font-semibold text-gray-700">Interactive Map</h2>
         <div className="flex space-x-2">
@@ -268,6 +316,17 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
                     <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}` }}></div>
                     {MAP_LAYERS.ADVISORY}
                   </label>
+                  
+                  <label className="flex items-center text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={mapControls.layers.open}
+                      onChange={() => toggleLayer('open')}
+                      className="mr-2"
+                    />
+                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}` }}></div>
+                    {MAP_LAYERS.OPEN}
+                  </label>
                 </div>
               </div>
             )}
@@ -282,10 +341,24 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
           >
             <HelpCircle className="h-5 w-5 text-gray-700" />
           </Button>
+          
+          <Button
+            size="icon"
+            variant="outline"
+            className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
+            title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+            onClick={toggleFullScreen}
+          >
+            {isFullScreen ? (
+              <Minimize className="h-5 w-5 text-gray-700" />
+            ) : (
+              <Maximize className="h-5 w-5 text-gray-700" />
+            )}
+          </Button>
         </div>
       </div>
       
-      <div id="map" className="flex-grow">
+      <div id="map" className="flex-grow" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : '400px' }}>
         {/* Map will be initialized here via Leaflet */}
       </div>
       

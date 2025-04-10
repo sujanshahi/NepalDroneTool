@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { AirspaceZone } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -10,26 +10,75 @@ interface InfoDrawerProps {
 }
 
 const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }) => {
+  const drawerRef = useRef<HTMLDivElement>(null);
+  
+  // Close drawer when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+  
+  // Handle escape key to close drawer
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen, onClose]);
+  
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
-      <div className="absolute right-0 top-0 bottom-0 w-full md:w-96 bg-white shadow-lg p-5 overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-heading font-semibold text-lg">
-            {selectedZone ? selectedZone.name : "Airspace Information"}
-          </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-gray-500 hover:text-gray-700"
-            onClick={onClose}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-end" onClick={(e) => e.stopPropagation()}>
+      <div 
+        ref={drawerRef}
+        className="relative right-0 top-0 h-full w-full md:w-96 bg-white shadow-lg overflow-y-auto"
+        style={{ 
+          maxWidth: '100vw',
+          animation: 'slideIn 0.3s ease-out',
+          transform: 'translateX(0)'
+        }}
+      >
+        <div className="sticky top-0 z-10 bg-white p-5 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h2 className="font-heading font-semibold text-lg">
+              {selectedZone ? selectedZone.name : "Airspace Information"}
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-gray-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         
-        <div className="space-y-4">
+        <div className="p-5 space-y-4">
           {selectedZone ? (
             <div className="border-b border-gray-200 pb-4">
               <h3 className="font-medium text-[#003893] mb-2">{selectedZone.type.charAt(0).toUpperCase() + selectedZone.type.slice(1)} Airspace</h3>
@@ -53,6 +102,13 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
                 <div className="bg-blue-500 bg-opacity-10 p-3 rounded-md text-sm">
                   <p className="font-medium text-blue-600">Special considerations apply</p>
                   <p>Additional permissions may be required depending on the specific area.</p>
+                </div>
+              )}
+              
+              {selectedZone.type === "open" && (
+                <div className="bg-green-500 bg-opacity-10 p-3 rounded-md text-sm">
+                  <p className="font-medium text-green-600">Open for operations</p>
+                  <p>General drone regulations still apply, but no specific zone restrictions.</p>
                 </div>
               )}
             </div>
@@ -86,6 +142,15 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
                   <li>Temporary restricted zones</li>
                 </ul>
               </div>
+              
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="font-medium text-[#003893] mb-2">Open Airspace</h3>
+                <p className="text-sm text-gray-700 mb-2">Areas where drone operations are generally allowed following standard regulations.</p>
+                <div className="bg-green-500 bg-opacity-10 p-3 rounded-md text-sm">
+                  <p className="font-medium text-green-600">Open for operations</p>
+                  <p>General drone regulations still apply, including altitude limits and visual line of sight requirements.</p>
+                </div>
+              </div>
             </>
           )}
           
@@ -114,6 +179,18 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
           </div>
         </div>
       </div>
+      
+      {/* Add slide-in animation styles */}
+      <style jsx global>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -113,17 +113,30 @@ export const isPointInZone = (
 // Fetch the GeoJSON outline for Nepal
 export const fetchNepalOutline = async (): Promise<GeoJSON.Feature> => {
   try {
-    const response = await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
-    const data = await response.json();
+    // Hardcoded simplified Nepal GeoJSON to avoid external API issues
+    const nepalFeature = {
+      "type": "Feature",
+      "properties": {
+        "ADMIN": "Nepal",
+        "ISO_A3": "NPL"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.088, 28.794], [80.476, 29.729], [81.112, 30.183], [81.546, 30.423], 
+            [82.327, 30.334], [83.337, 29.463], [84.125, 29.288], [84.675, 28.549], 
+            [85.251, 28.323], [85.661, 28.203], [86.100, 27.926], [86.730, 27.989], 
+            [87.227, 27.882], [87.771, 27.647], [88.089, 27.446], [88.175, 26.810], 
+            [88.043, 26.414], [87.106, 26.536], [86.696, 26.563], [85.251, 26.726], 
+            [84.667, 27.041], [83.305, 27.364], [82.247, 27.364], [81.112, 27.926], 
+            [80.476, 28.104], [80.088, 28.794]
+          ]
+        ]
+      }
+    };
     
-    // Filter to only get Nepal
-    const nepalFeature = data.features.find((feature: any) => feature.properties.ADMIN === 'Nepal');
-    
-    if (!nepalFeature) {
-      throw new Error('Nepal outline not found in the GeoJSON data');
-    }
-    
-    return nepalFeature;
+    return nepalFeature as GeoJSON.Feature;
   } catch (error) {
     console.error('Error fetching Nepal outline:', error);
     throw error;
