@@ -2,7 +2,8 @@ import {
   users, type User, type InsertUser,
   flightPlans, type FlightPlan, type InsertFlightPlan,
   airspaceZones, type AirspaceZone, type InsertAirspaceZone,
-  regulations, type Regulation, type InsertRegulation
+  regulations, type Regulation, type InsertRegulation,
+  aircraft, type Aircraft, type InsertAircraft
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { eq } from "drizzle-orm";
@@ -22,7 +23,7 @@ const pool = new Pool({
 });
 
 // Drizzle ORM instance
-const db = drizzle({ client: pool, schema: { users, flightPlans, airspaceZones, regulations } });
+const db = drizzle({ client: pool, schema: { users, flightPlans, airspaceZones, regulations, aircraft } });
 
 // Interface for storage operations
 export interface IStorage {
@@ -30,6 +31,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   
   // Flight plan operations
   getFlightPlan(id: number): Promise<FlightPlan | undefined>;
@@ -37,6 +39,13 @@ export interface IStorage {
   createFlightPlan(flightPlan: InsertFlightPlan): Promise<FlightPlan>;
   updateFlightPlan(id: number, flightPlan: Partial<FlightPlan>): Promise<FlightPlan | undefined>;
   deleteFlightPlan(id: number): Promise<boolean>;
+  
+  // Aircraft operations
+  getAircraft(id: number): Promise<Aircraft | undefined>;
+  getAircraftByUserId(userId: number): Promise<Aircraft[]>;
+  createAircraft(aircraft: InsertAircraft): Promise<Aircraft>;
+  updateAircraft(id: number, aircraft: Partial<Aircraft>): Promise<Aircraft | undefined>;
+  deleteAircraft(id: number): Promise<boolean>;
   
   // Airspace zone operations
   getAirspaceZone(id: number): Promise<AirspaceZone | undefined>;
@@ -66,6 +75,42 @@ export class PgStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const result = await db.insert(users).values(insertUser).returning();
     return result[0];
+  }
+
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+  
+  // Aircraft operations
+  async getAircraft(id: number): Promise<Aircraft | undefined> {
+    const result = await db.select().from(aircraft).where(eq(aircraft.id, id));
+    return result[0];
+  }
+
+  async getAircraftByUserId(userId: number): Promise<Aircraft[]> {
+    return await db.select().from(aircraft).where(eq(aircraft.userId, userId));
+  }
+
+  async createAircraft(aircraftData: InsertAircraft): Promise<Aircraft> {
+    const result = await db.insert(aircraft).values(aircraftData).returning();
+    return result[0];
+  }
+
+  async updateAircraft(id: number, aircraftData: Partial<Aircraft>): Promise<Aircraft | undefined> {
+    const result = await db.update(aircraft)
+      .set(aircraftData)
+      .where(eq(aircraft.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteAircraft(id: number): Promise<boolean> {
+    const result = await db.delete(aircraft).where(eq(aircraft.id, id)).returning();
+    return result.length > 0;
   }
   
   // Flight plan operations

@@ -1,7 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAirspaceZoneSchema, insertRegulationSchema, insertFlightPlanSchema } from "@shared/schema";
+import { insertAirspaceZoneSchema, insertRegulationSchema, insertFlightPlanSchema, insertAircraftSchema } from "@shared/schema";
+import { setupAuth } from "./auth";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {

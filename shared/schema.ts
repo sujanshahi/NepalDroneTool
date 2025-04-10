@@ -7,11 +7,18 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email"),
+  fullName: text("full_name"),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+  role: text("role").notNull().default("user"), // user, admin
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  email: true,
+  fullName: true,
 });
 
 // Flight plans schema - to save user flight plans
@@ -91,3 +98,33 @@ export type AirspaceZone = typeof airspaceZones.$inferSelect;
 
 export type InsertRegulation = z.infer<typeof insertRegulationSchema>;
 export type Regulation = typeof regulations.$inferSelect;
+
+// Aircraft schema - for user's drone fleet
+export const aircraft = pgTable("aircraft", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  manufacturer: text("manufacturer").notNull(),
+  model: text("model").notNull(),
+  serialNumber: text("serial_number"),
+  weight: text("weight").notNull(), // in grams
+  category: text("category").notNull(), // micro, small, medium, large
+  registrationNumber: text("registration_number"),
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+  status: text("status").notNull().default("active"), // active, inactive, maintenance
+});
+
+export const insertAircraftSchema = createInsertSchema(aircraft).pick({
+  userId: true,
+  name: true,
+  manufacturer: true,
+  model: true,
+  serialNumber: true,
+  weight: true,
+  category: true,
+  registrationNumber: true,
+});
+
+export type InsertAircraft = z.infer<typeof insertAircraftSchema>;
+export type Aircraft = typeof aircraft.$inferSelect;
