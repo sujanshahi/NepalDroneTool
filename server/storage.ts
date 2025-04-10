@@ -4,13 +4,17 @@ import {
   airspaceZones, type AirspaceZone, type InsertAirspaceZone,
   regulations, type Regulation, type InsertRegulation
 } from "@shared/schema";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/neon-serverless";
 import { eq } from "drizzle-orm";
-import { Pool } from "pg";
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from "ws";
 import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
+
+// Configure Neon connection
+neonConfig.webSocketConstructor = ws;
 
 // Database connection
 const pool = new Pool({
@@ -18,7 +22,7 @@ const pool = new Pool({
 });
 
 // Drizzle ORM instance
-const db = drizzle(pool);
+const db = drizzle({ client: pool, schema: { users, flightPlans, airspaceZones, regulations } });
 
 // Interface for storage operations
 export interface IStorage {

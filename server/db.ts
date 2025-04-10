@@ -1,36 +1,15 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Pool } from "pg";
-import dotenv from "dotenv";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from "ws";
+import * as schema from "@shared/schema";
 
-// Load environment variables
-dotenv.config();
+neonConfig.webSocketConstructor = ws;
 
-async function main() {
-  console.log("Database migration started...");
-  
-  // Connect to the database
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
-  });
-  
-  const db = drizzle(pool);
-  
-  // This will automatically push the schema to the database
-  console.log("Pushing schema changes...");
-  
-  try {
-    // You would normally use migrate(db, { migrationsFolder: "./drizzle" })
-    // But we'll use a direct push for simplicity
-    
-    // We'll execute this via npm scripts
-    console.log("Schema push completed successfully.");
-  } catch (error) {
-    console.error("Error during schema push:", error);
-    process.exit(1);
-  }
-  
-  await pool.end();
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
 }
 
-main().catch(console.error);
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });
