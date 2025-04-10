@@ -77,7 +77,8 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Incorrect password" });
         }
         
-        return done(null, user);
+        // Cast user to the Express.User type
+        return done(null, user as unknown as Express.User);
       } catch (error) {
         return done(error);
       }
@@ -91,7 +92,7 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-      done(null, user);
+      done(null, user as unknown as Express.User);
     } catch (error) {
       done(error);
     }
@@ -118,7 +119,7 @@ export function setupAuth(app: Express) {
       });
       
       // Log user in after registration
-      req.login(newUser, (err) => {
+      req.login(newUser as unknown as Express.User, (err) => {
         if (err) return next(err);
         // Send user data without password
         const { password, ...userWithoutPassword } = newUser;
@@ -162,7 +163,7 @@ export function setupAuth(app: Express) {
     }
     
     // Send user data without password
-    const { password, ...userWithoutPassword } = req.user as User;
+    const { password, ...userWithoutPassword } = req.user as Express.User;
     res.json(userWithoutPassword);
   });
 
