@@ -1,16 +1,35 @@
 import React from 'react';
 import { useFlightPlan } from '@/context/FlightPlanContext';
+import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
 import { LANGUAGES } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Loader2, LogOut, User as UserIcon, PlaneTakeoff } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { activeLanguage, setActiveLanguage } = useFlightPlan();
+  const { user, logoutMutation } = useAuth();
+  const [, navigate] = useLocation();
 
-  const toggleLanguage = () => {
-    setActiveLanguage(
-      activeLanguage === LANGUAGES.ENGLISH ? 
-      LANGUAGES.NEPALI : 
-      LANGUAGES.ENGLISH
-    );
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        navigate('/auth');
+      }
+    });
+  };
+
+  const getInitials = (username: string) => {
+    return username.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -25,19 +44,72 @@ const Header: React.FC = () => {
           </div>
           <h1 className="font-heading font-bold text-xl text-gray-700">Nepal Drone Flight Planner</h1>
         </div>
-        <div className="flex items-center bg-gray-200 rounded-md overflow-hidden">
-          <div 
-            className={`px-3 py-1 cursor-pointer text-sm ${activeLanguage === LANGUAGES.ENGLISH ? 'bg-[#003893] text-white' : ''}`}
-            onClick={() => setActiveLanguage(LANGUAGES.ENGLISH)}
-          >
-            English
+        
+        <div className="flex items-center gap-4">
+          {/* Language switcher */}
+          <div className="flex items-center bg-gray-200 rounded-md overflow-hidden">
+            <div 
+              className={`px-3 py-1 cursor-pointer text-sm ${activeLanguage === LANGUAGES.ENGLISH ? 'bg-[#003893] text-white' : ''}`}
+              onClick={() => setActiveLanguage(LANGUAGES.ENGLISH)}
+            >
+              English
+            </div>
+            <div 
+              className={`px-3 py-1 cursor-pointer text-sm ${activeLanguage === LANGUAGES.NEPALI ? 'bg-[#003893] text-white' : ''}`}
+              onClick={() => setActiveLanguage(LANGUAGES.NEPALI)}
+            >
+              नेपाली
+            </div>
           </div>
-          <div 
-            className={`px-3 py-1 cursor-pointer text-sm ${activeLanguage === LANGUAGES.NEPALI ? 'bg-[#003893] text-white' : ''}`}
-            onClick={() => setActiveLanguage(LANGUAGES.NEPALI)}
-          >
-            नेपाली
-          </div>
+          
+          {/* User profile dropdown */}
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary text-white">
+                      {getInitials(user.username)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.username}</p>
+                    {user.email && <p className="text-xs leading-none text-muted-foreground">{user.email}</p>}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/my-aircraft')}>
+                  <PlaneTakeoff className="mr-2 h-4 w-4" />
+                  <span>My Aircraft</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                >
+                  {logoutMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>Logging out...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>
