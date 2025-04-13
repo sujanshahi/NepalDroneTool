@@ -48,29 +48,7 @@ const Header: React.FC = () => {
           {/* Language switcher */}
           <LanguageSwitch />
           
-          {/* Navigation menu */}
-          <nav className="hidden md:flex space-x-4 mr-4">
-            <Button variant="ghost" onClick={() => navigate('/')}>Home</Button>
-            {user && (
-              <>
-                <Button variant="ghost" onClick={() => navigate('/aircraft')}>My Aircraft</Button>
-                <Button variant="ghost" onClick={() => navigate('/profile')}>Profile</Button>
-              </>
-            )}
-          </nav>
-          
-          {/* Login button for unauthenticated users */}
-          {!user && (
-            <Button 
-              variant="default" 
-              onClick={() => navigate('/auth')}
-              className="bg-primary text-white hover:bg-primary/90"
-            >
-              Login
-            </Button>
-          )}
-          
-          {/* User profile dropdown for authenticated users */}
+          {/* User profile dropdown */}
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -94,7 +72,7 @@ const Header: React.FC = () => {
                   <UserIcon className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/aircraft')}>
+                <DropdownMenuItem onClick={() => navigate('/my-aircraft')}>
                   <PlaneTakeoff className="mr-2 h-4 w-4" />
                   <span>My Aircraft</span>
                 </DropdownMenuItem>

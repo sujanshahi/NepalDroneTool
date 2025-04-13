@@ -18,31 +18,30 @@ export const MAP_LAYERS = {
   OPEN: "Open Airspace"
 };
 
-// Airspace zone styling - Similar to the Canadian reference tool
+// Airspace zone styling
 export const ZONE_STYLES = {
   restricted: {
-    color: "#e74c3c",      // Red color like in the reference image
-    fillColor: "#e74c3c",
-    fillOpacity: 0.25,     // More transparent to see the map below
-    weight: 2,             // Thinner border to match reference
-    dashArray: ''          // Solid line like in the reference
+    color: "#F44336",
+    fillColor: "#F44336",
+    fillOpacity: 0.4,
+    weight: 2
   },
   controlled: {
-    color: "#e67e22",      // Orange color like in the reference image
-    fillColor: "#e67e22",
-    fillOpacity: 0.25,
+    color: "#FF9800",
+    fillColor: "#FF9800",
+    fillOpacity: 0.4,
     weight: 2
   },
   advisory: {
-    color: "#3498db",      // Blue color like in the reference image
-    fillColor: "#3498db",
-    fillOpacity: 0.25,
+    color: "#2196F3",
+    fillColor: "#2196F3",
+    fillOpacity: 0.4,
     weight: 2
   },
   open: {
-    color: "#2ecc71",      // Green color like in the reference image
-    fillColor: "#2ecc71",
-    fillOpacity: 0.25,
+    color: "#4CAF50",
+    fillColor: "#4CAF50",
+    fillOpacity: 0.4,
     weight: 2
   }
 };

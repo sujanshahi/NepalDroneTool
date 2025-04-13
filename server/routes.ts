@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import { insertAirspaceZoneSchema, insertRegulationSchema, insertFlightPlanSchema, insertAircraftSchema } from "@shared/schema";
 import { setupAuth } from "./auth";
 import { ZodError } from "zod";
-import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
