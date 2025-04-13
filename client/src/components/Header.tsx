@@ -16,7 +16,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Loader2, LogOut, User as UserIcon, PlaneTakeoff } from 'lucide-react';
 
 const Header: React.FC = () => {
-  const { activeLanguage, setActiveLanguage } = useFlightPlan();
   const { user, logoutMutation } = useAuth();
   const [, navigate] = useLocation();
 

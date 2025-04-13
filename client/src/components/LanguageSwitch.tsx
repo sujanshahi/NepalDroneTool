@@ -10,9 +10,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface LanguageOption {
+  code: string;
+  native: string;
+  english: string;
+  flag: string;
+}
+
 const LanguageSwitch: React.FC = () => {
   const { activeLanguage, setActiveLanguage } = useFlightPlan();
-
+  const typedLanguages = LANGUAGES as Record<string, LanguageOption>;
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -22,11 +30,11 @@ const LanguageSwitch: React.FC = () => {
           className="flex items-center gap-2 bg-white"
         >
           <Globe className="h-4 w-4" />
-          <span>{LANGUAGES[activeLanguage as keyof typeof LANGUAGES]?.native || 'Language'}</span>
+          <span>{typedLanguages[activeLanguage]?.native || 'Language'}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {Object.entries(LANGUAGES).map(([code, language]) => (
+        {Object.entries(typedLanguages).map(([code, language]) => (
           <DropdownMenuItem 
             key={code}
             className={`flex items-center justify-between ${activeLanguage === code ? 'bg-muted' : ''}`}

@@ -33,9 +33,12 @@ export const createZoneCircle = (
     }
     
     if (Array.isArray(zone.geometry.coordinates[0])) {
-      center = [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]];
+      center = [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]] as L.LatLngExpression;
     } else {
-      center = [zone.geometry.coordinates[1], zone.geometry.coordinates[0]];
+      center = [
+        zone.geometry.coordinates[1] as number, 
+        zone.geometry.coordinates[0] as number
+      ] as L.LatLngExpression;
     }
     
     radius = zone.geometry.radius || 1000; // Default 1km if radius is missing
@@ -124,9 +127,12 @@ export const isPointInZone = (
     }
     
     if (Array.isArray(zone.geometry.coordinates[0])) {
-      center = [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]];
+      center = [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]] as L.LatLngExpression;
     } else {
-      center = [zone.geometry.coordinates[1], zone.geometry.coordinates[0]];
+      center = [
+        zone.geometry.coordinates[1] as number, 
+        zone.geometry.coordinates[0] as number
+      ] as L.LatLngExpression;
     }
     
     radius = zone.geometry.radius || 1000;
@@ -157,7 +163,7 @@ export const isPointInZone = (
       return false;
     }
     
-    center = [totalLat / pointCount, totalLng / pointCount];
+    center = [totalLat / pointCount, totalLng / pointCount] as L.LatLngExpression;
     
     // Use the same radius determination as in createZoneCircle
     radius = 5000;
