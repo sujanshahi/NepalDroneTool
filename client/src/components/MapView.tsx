@@ -491,16 +491,246 @@ const MapView: React.FC<MapViewProps> = ({
     setMeasurementResult(null);
   };
   
+  // Marker placement variables
+  const [markerPlacementStatus, setMarkerPlacementStatus] = useState<string>('');
+  const customMarkerRef = useRef<L.Marker | null>(null);
+  
   // Enable marker placement mode
   const enableMarkerPlacement = () => {
-    // Implementation will be added here
-    console.log('Marker placement mode enabled');
+    if (!mapRef.current) return;
+    
+    setMarkerPlacementStatus('Click on the map to place a marker');
+    
+    // Remove existing click handler
+    mapRef.current.off('click');
+    
+    // Add marker placement click handler
+    mapRef.current.on('click', handleMarkerPlacement);
   };
+  
+  // Handle marker placement
+  const handleMarkerPlacement = (e: L.LeafletMouseEvent) => {
+    if (!mapRef.current) return;
+    
+    const { lat, lng } = e.latlng;
+    
+    // Remove existing custom marker if exists
+    if (customMarkerRef.current) {
+      customMarkerRef.current.remove();
+    }
+    
+    // Create custom marker icon
+    const customIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div class="relative">
+          <div class="w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold">
+            M
+          </div>
+          <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-solid border-t-red-500 border-t-8 border-x-transparent border-x-4 border-b-0"></div>
+        </div>
+      `,
+      iconSize: [24, 36],
+      iconAnchor: [12, 36]
+    });
+    
+    // Create a new marker
+    customMarkerRef.current = L.marker([lat, lng], {
+      icon: customIcon,
+      draggable: true
+    }).addTo(mapRef.current);
+    
+    // Add a popup to the marker
+    customMarkerRef.current.bindPopup(`
+      <div class="p-1">
+        <p class="text-sm font-medium">Custom Marker</p>
+        <p class="text-xs">${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+      </div>
+    `);
+    
+    // Update status
+    setMarkerPlacementStatus('Marker placed. You can drag it to adjust position.');
+    
+    // Add drag end event to update popup content with new coordinates
+    customMarkerRef.current.on('dragend', () => {
+      if (customMarkerRef.current) {
+        const newPos = customMarkerRef.current.getLatLng();
+        customMarkerRef.current.setPopupContent(`
+          <div class="p-1">
+            <p class="text-sm font-medium">Custom Marker</p>
+            <p class="text-xs">${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}</p>
+          </div>
+        `);
+      }
+    });
+    
+    // Reset to normal click behavior after a short delay
+    setTimeout(() => {
+      setActiveMapTool(null);
+      setMarkerPlacementStatus('');
+      
+      if (mapRef.current) {
+        mapRef.current.off('click', handleMarkerPlacement);
+        mapRef.current.on('click', async (e) => {
+          const { lat, lng } = e.latlng;
+          await handleLocationSelect([lat, lng]);
+        });
+      }
+    }, 2000);
+  };
+  
+  // Circle drawing references
+  const circleMarkerRef = useRef<L.Marker | null>(null);
+  const circleDrawingRef = useRef<L.Circle | null>(null);
+  const circleCenterRef = useRef<[number, number] | null>(null);
+  const [circleRadius, setCircleRadius] = useState<number>(0);
+  const [circleDrawingStatus, setCircleDrawingStatus] = useState<string>('');
   
   // Enable circle drawing mode
   const enableCircleDrawing = () => {
-    // Implementation will be added here
-    console.log('Circle drawing mode enabled');
+    if (!mapRef.current) return;
+    
+    setCircleDrawingStatus('Click on the map to set the circle center');
+    
+    // Remove existing click handler
+    mapRef.current.off('click');
+    
+    // Add circle center click handler
+    mapRef.current.on('click', handleCircleCenterClick);
+  };
+  
+  // Handle setting the circle center
+  const handleCircleCenterClick = (e: L.LeafletMouseEvent) => {
+    if (!mapRef.current) return;
+    
+    const { lat, lng } = e.latlng;
+    circleCenterRef.current = [lat, lng];
+    
+    // Create or move the center marker
+    if (circleMarkerRef.current) {
+      circleMarkerRef.current.setLatLng([lat, lng]);
+    } else {
+      circleMarkerRef.current = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: 'circle-center-point',
+          html: '<div class="w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).addTo(mapRef.current);
+    }
+    
+    // Create circle with initial radius of 100 meters
+    const initialRadius = 100;
+    setCircleRadius(initialRadius);
+    
+    if (circleDrawingRef.current) {
+      circleDrawingRef.current.setLatLng([lat, lng]);
+      circleDrawingRef.current.setRadius(initialRadius);
+    } else {
+      circleDrawingRef.current = L.circle([lat, lng], {
+        radius: initialRadius,
+        color: '#10b981',
+        fillColor: '#10b981',
+        fillOpacity: 0.2,
+        weight: 2
+      }).addTo(mapRef.current);
+    }
+    
+    setCircleDrawingStatus('Move the cursor to set the radius, click to confirm');
+    
+    // Remove click handler and add mousemove handler
+    mapRef.current.off('click');
+    mapRef.current.on('mousemove', handleCircleRadiusMove);
+    mapRef.current.on('click', handleCircleRadiusClick);
+  };
+  
+  // Handle moving the mouse to set circle radius
+  const handleCircleRadiusMove = (e: L.LeafletMouseEvent) => {
+    if (!mapRef.current || !circleCenterRef.current || !circleDrawingRef.current) return;
+    
+    const { lat, lng } = e.latlng;
+    const center = L.latLng(circleCenterRef.current[0], circleCenterRef.current[1]);
+    const cursorLatLng = L.latLng(lat, lng);
+    
+    // Calculate distance between center and cursor position
+    const radius = center.distanceTo(cursorLatLng);
+    setCircleRadius(radius);
+    
+    // Update circle radius
+    circleDrawingRef.current.setRadius(radius);
+    
+    // Update status message
+    setCircleDrawingStatus(`Current radius: ${radius.toFixed(0)} meters. Click to confirm.`);
+  };
+  
+  // Handle click to confirm circle radius
+  const handleCircleRadiusClick = (e: L.LeafletMouseEvent) => {
+    if (!mapRef.current || !circleCenterRef.current || !circleDrawingRef.current) return;
+    
+    // Calculate the final radius
+    const { lat, lng } = e.latlng;
+    const center = L.latLng(circleCenterRef.current[0], circleCenterRef.current[1]);
+    const cursorLatLng = L.latLng(lat, lng);
+    const finalRadius = center.distanceTo(cursorLatLng);
+    
+    // Finalize the circle with the calculated radius
+    circleDrawingRef.current.setRadius(finalRadius);
+    
+    // Update status message
+    setCircleDrawingStatus(`Circle with radius ${finalRadius.toFixed(0)} meters created`);
+    
+    // Reset handlers to default
+    mapRef.current.off('mousemove', handleCircleRadiusMove);
+    mapRef.current.off('click', handleCircleRadiusClick);
+    
+    // Restore default click behavior
+    setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.on('click', async (e) => {
+          const { lat, lng } = e.latlng;
+          await handleLocationSelect([lat, lng]);
+        });
+      }
+    }, 100);
+    
+    // Clean up the circle after a few seconds
+    setTimeout(() => {
+      cleanupCircleDrawing();
+      setActiveMapTool(null);
+    }, 5000);
+  };
+  
+  // Clean up circle drawing
+  const cleanupCircleDrawing = () => {
+    if (!mapRef.current) return;
+    
+    // Remove circle and marker
+    if (circleDrawingRef.current) {
+      circleDrawingRef.current.remove();
+      circleDrawingRef.current = null;
+    }
+    
+    if (circleMarkerRef.current) {
+      circleMarkerRef.current.remove();
+      circleMarkerRef.current = null;
+    }
+    
+    // Reset state
+    circleCenterRef.current = null;
+    setCircleRadius(0);
+    setCircleDrawingStatus('');
+    
+    // Reset handlers
+    mapRef.current.off('mousemove', handleCircleRadiusMove);
+    mapRef.current.off('click', handleCircleRadiusClick);
+    mapRef.current.off('click', handleCircleCenterClick);
+    
+    // Restore default click behavior
+    mapRef.current.on('click', async (e) => {
+      const { lat, lng } = e.latlng;
+      await handleLocationSelect([lat, lng]);
+    });
   };
 
   return (
@@ -823,16 +1053,16 @@ const MapView: React.FC<MapViewProps> = ({
                   </Button>
                 </div>
               )}
-              {!measurementResult && activeMapTool === 'marker' && (
+              {!measurementResult && activeMapTool === 'marker' && markerPlacementStatus && (
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-2 text-red-500" />
-                  <span>Click on the map to place a marker</span>
+                  <span>{markerPlacementStatus}</span>
                 </div>
               )}
-              {!measurementResult && activeMapTool === 'circle' && (
+              {!measurementResult && activeMapTool === 'circle' && circleDrawingStatus && (
                 <div className="flex items-center">
                   <CircleDashed className="h-4 w-4 mr-2 text-green-500" />
-                  <span>Click on the map to place a circle center, then drag to set radius</span>
+                  <span>{circleDrawingStatus}</span>
                 </div>
               )}
             </div>
