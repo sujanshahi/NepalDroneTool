@@ -28,16 +28,43 @@ declare global {
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  try {
+    if (!password) {
+      throw new Error('Password is required');
+    }
+    
+    const salt = randomBytes(16).toString("hex");
+    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+    return `${buf.toString("hex")}.${salt}`;
+  } catch (error) {
+    console.error('Error hashing password:', error);
+    throw error;
+  }
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    // Check if stored has the correct format
+    if (!stored || !stored.includes('.')) {
+      console.error('Invalid stored password format');
+      return false;
+    }
+    
+    const [hashed, salt] = stored.split(".");
+    
+    // Ensure salt is valid
+    if (!salt) {
+      console.error('Missing salt in stored password');
+      return false;
+    }
+    
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error('Error comparing passwords:', error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -131,15 +158,28 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: Express.User | false, info: { message: string }) => {
-      if (err) return next(err);
+    // Validate request body
+    if (!req.body.username || !req.body.password) {
+      return res.status(400).json({ error: "Username and password are required" });
+    }
+    
+    // Use passport for authentication
+    passport.authenticate("local", (err: any, user: Express.User | false, info: { message?: string } = {}) => {
+      if (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({ error: "Internal server error during authentication" });
+      }
       
       if (!user) {
         return res.status(401).json({ error: info.message || "Authentication failed" });
       }
       
-      req.login(user, (err) => {
-        if (err) return next(err);
+      // Log the user in
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('Login session error:', loginErr);
+          return res.status(500).json({ error: "Failed to create login session" });
+        }
         
         // Send user data without password
         const { password, ...userWithoutPassword } = user;
