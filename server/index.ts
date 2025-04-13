@@ -4,8 +4,6 @@ import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { createServer } from "http";
-// Import proxy server module
-import "./proxy";
 
 // Load environment variables
 dotenv.config();
@@ -65,10 +63,10 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Serve the app on port 3000 as requested by user
-  // This will be our primary port
-  const port = 3000;
-  
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",
