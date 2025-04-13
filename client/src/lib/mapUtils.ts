@@ -1,5 +1,5 @@
 import L from 'leaflet';
-import { AirspaceZone } from './types';
+import { AirspaceZone, LocationSearchResult } from './types';
 import { ZONE_STYLES } from './constants';
 
 // Set up custom marker icon to fix the Leaflet icon path issue
