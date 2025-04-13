@@ -188,15 +188,26 @@ function renderFlightPlanList(
           </CardHeader>
           <CardContent className="flex-grow">
             <div className="space-y-2 text-sm">
-              {plan.location && typeof plan.location === 'object' && 'address' in plan.location && plan.location.address && (
+              {plan.location && (
                 <div className="flex items-start">
                   <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
-                  <span>{plan.location.address}</span>
+                  <span>
+                    {typeof plan.location === 'object' && 
+                     plan.location !== null && 
+                     'address' in plan.location ? 
+                       plan.location.address : 
+                       'Location set'}
+                  </span>
                 </div>
               )}
-              {plan.flight && typeof plan.flight === 'object' && 'altitude' in plan.flight && plan.flight.altitude && (
+              {plan.flight && (
                 <div>
-                  <span className="text-muted-foreground">Altitude:</span> {plan.flight.altitude}m
+                  <span className="text-muted-foreground">Altitude:</span>
+                  {typeof plan.flight === 'object' && 
+                   plan.flight !== null && 
+                   'altitude' in plan.flight ? 
+                     `${plan.flight.altitude}m` : 
+                     'Set'}
                 </div>
               )}
               {plan.category && (

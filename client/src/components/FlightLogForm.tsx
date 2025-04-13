@@ -35,7 +35,7 @@ const flightLogSchema = z.object({
   pilotName: z.string().min(2, { 
     message: "Pilot name must be at least 2 characters", 
   }),
-  observers: z.string().optional().nullable(),
+  observers: z.string().optional(),
   startTime: z.date({
     required_error: "Please select a start time",
   }),
@@ -131,12 +131,8 @@ export function FlightLogForm({ initialValues, onSubmit, isLoading = false }: Fl
 
   // Handle form submission
   function handleFormSubmit(values: FlightLogFormValues) {
-    // Convert observers to proper format
-    const transformedValues = {
-      ...values,
-      observers: values.observers ? values.observers : null
-    };
-    onSubmit(transformedValues);
+    // Submit values directly - observer is already a string
+    onSubmit(values);
   }
 
   return (

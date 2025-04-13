@@ -97,8 +97,8 @@ export default function EditFlightLogPage() {
   const formInitialValues = flightLog ? {
     ...flightLog,
     // Form expects Date objects for these fields
-    startTime: flightLog.startTime,
-    endTime: flightLog.endTime
+    startTime: new Date(flightLog.startTime),
+    endTime: new Date(flightLog.endTime)
   } : undefined;
 
   return (
