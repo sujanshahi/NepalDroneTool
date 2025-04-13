@@ -105,7 +105,7 @@ const LandingPage: React.FC = () => {
             <Button 
               size="lg" 
               className="bg-red-600 hover:bg-red-700 text-white px-8"
-              onClick={() => navigate('/map')}
+              onClick={() => navigate('/')}
             >
               Get Started
             </Button>
@@ -181,15 +181,23 @@ const LandingPage: React.FC = () => {
         </p>
         
         <div className="mb-6">
-          <select className="border border-gray-300 rounded-md p-2 w-full max-w-md">
+          <select 
+            className="border border-gray-300 rounded-md p-2 w-full max-w-md"
+            onChange={(e) => {
+              if (e.target.value) {
+                // Navigate to province-specific regulations page
+                navigate(`/regulations?province=${e.target.value}`);
+              }
+            }}
+          >
             <option value="">Select a province</option>
-            <option value="province1">Koshi Province</option>
-            <option value="province2">Madhesh Province</option>
-            <option value="province3">Bagmati Province</option>
-            <option value="province4">Gandaki Province</option>
-            <option value="province5">Lumbini Province</option>
-            <option value="province6">Karnali Province</option>
-            <option value="province7">Sudurpashchim Province</option>
+            <option value="koshi">Koshi Province</option>
+            <option value="madhesh">Madhesh Province</option>
+            <option value="bagmati">Bagmati Province</option>
+            <option value="gandaki">Gandaki Province</option>
+            <option value="lumbini">Lumbini Province</option>
+            <option value="karnali">Karnali Province</option>
+            <option value="sudurpashchim">Sudurpashchim Province</option>
           </select>
         </div>
       </section>

@@ -327,7 +327,36 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   
   // Toggle fullscreen mode
   const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
+    setIsFullScreen(prevState => {
+      const newFullscreenState = !prevState;
+      
+      if (mapRef.current) {
+        if (newFullscreenState) {
+          // If entering fullscreen
+          if (mapContainerRef.current && mapContainerRef.current.requestFullscreen) {
+            mapContainerRef.current.requestFullscreen()
+              .catch(err => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+              });
+          }
+        } else {
+          // If exiting fullscreen
+          if (document.exitFullscreen && document.fullscreenElement) {
+            document.exitFullscreen()
+              .catch(err => {
+                console.error(`Error attempting to exit fullscreen: ${err.message}`);
+              });
+          }
+        }
+        
+        // Invalidate map size to ensure proper display in new size
+        setTimeout(() => {
+          mapRef.current?.invalidateSize();
+        }, 200);
+      }
+      
+      return newFullscreenState;
+    });
   };
   
   // Add CSS to fix z-index issues
