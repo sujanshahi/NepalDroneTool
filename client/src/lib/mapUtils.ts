@@ -17,24 +17,82 @@ export const setupCustomMarkerIcon = () => {
   });
 };
 
-// Create a circle layer for a circular airspace zone
-export const createCircleZone = (
+// Create a circle layer for any airspace zone - converts all zones to circular representation
+export const createZoneCircle = (
   zone: AirspaceZone,
   onZoneClick: (zone: AirspaceZone) => void
 ) => {
-  if (zone.geometry.type !== 'Circle' || !Array.isArray(zone.geometry.coordinates) && zone.geometry.radius) {
-    console.error('Invalid circle zone data:', zone);
-    return null;
+  let center: L.LatLngExpression;
+  let radius: number;
+  
+  if (zone.geometry.type === 'Circle') {
+    // For circle zones, use the provided center and radius
+    if (!Array.isArray(zone.geometry.coordinates)) {
+      console.error('Invalid circle coordinates:', zone);
+      return null;
+    }
+    
+    if (Array.isArray(zone.geometry.coordinates[0])) {
+      center = [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]];
+    } else {
+      center = [zone.geometry.coordinates[1], zone.geometry.coordinates[0]];
+    }
+    
+    radius = zone.geometry.radius || 1000; // Default 1km if radius is missing
+  } else {
+    // For polygon zones, calculate the centroid and use a radius based on complexity
+    // This is a simplified approach - converting polygons to circles
+    if (!Array.isArray(zone.geometry.coordinates)) {
+      console.error('Invalid polygon coordinates:', zone);
+      return null;
+    }
+    
+    // Calculate a simple centroid
+    let totalLat = 0;
+    let totalLng = 0;
+    let pointCount = 0;
+    
+    // Handle both single array and nested arrays
+    if (Array.isArray(zone.geometry.coordinates[0])) {
+      if (Array.isArray(zone.geometry.coordinates[0][0])) {
+        // Nested arrays: [[lat, lng], [lat, lng], ...]
+        zone.geometry.coordinates[0].forEach(point => {
+          if (Array.isArray(point)) {
+            totalLng += point[0];
+            totalLat += point[1];
+            pointCount++;
+          }
+        });
+      } else {
+        // Single array: [lat, lng]
+        totalLng += zone.geometry.coordinates[0][0];
+        totalLat += zone.geometry.coordinates[0][1];
+        pointCount = 1;
+      }
+    }
+    
+    // Default to center of Nepal if we couldn't calculate a centroid
+    if (pointCount === 0) {
+      center = [28.3949, 84.124];
+      console.warn('Using default center for zone:', zone.name);
+    } else {
+      center = [totalLat / pointCount, totalLng / pointCount];
+    }
+    
+    // Set a default radius based on zone type
+    radius = 5000; // 5km default radius
+    
+    // Adjust radius based on zone type
+    if (zone.type === 'restricted') radius = 3000;
+    else if (zone.type === 'controlled') radius = 5000;
+    else if (zone.type === 'advisory') radius = 4000;
+    else if (zone.type === 'open') radius = 6000;
   }
   
-  // Handle different coordinate formats
-  const center = Array.isArray(zone.geometry.coordinates[0]) 
-    ? [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]]
-    : [zone.geometry.coordinates[1], zone.geometry.coordinates[0]];
-  
-  const circle = L.circle(center as L.LatLngExpression, {
-    radius: zone.geometry.radius,
-    ...ZONE_STYLES[zone.type]
+  // Create the circle with correct params
+  const circle = L.circle(center, {
+    ...ZONE_STYLES[zone.type],
+    radius: radius
   });
   
   circle.bindPopup(`
@@ -51,63 +109,70 @@ export const createCircleZone = (
   return circle;
 };
 
-// Create a polygon layer for a polygon airspace zone
-export const createPolygonZone = (
-  zone: AirspaceZone,
-  onZoneClick: (zone: AirspaceZone) => void
-) => {
-  if (zone.geometry.type !== 'Polygon' || !Array.isArray(zone.geometry.coordinates)) {
-    console.error('Invalid polygon zone data:', zone);
-    return null;
-  }
-  
-  // Convert coordinates to Leaflet format [lat, lng]
-  const latlngs = zone.geometry.coordinates.map(coord => 
-    Array.isArray(coord[0]) 
-      ? coord.map(point => [point[1], point[0]]) 
-      : [coord[1], coord[0]]
-  );
-  
-  const polygon = L.polygon(latlngs as L.LatLngExpression[][]);
-  
-  polygon.setStyle(ZONE_STYLES[zone.type]);
-  
-  polygon.bindPopup(`
-    <div class="text-sm">
-      <h3 class="font-medium">${zone.name}</h3>
-      <p>${zone.description}</p>
-    </div>
-  `);
-  
-  polygon.on('click', () => {
-    onZoneClick(zone);
-  });
-  
-  return polygon;
-};
-
-// Check if a point is within a zone (basic implementation)
+// Check if a point is within a zone (circular implementation for all zones)
 export const isPointInZone = (
   point: [number, number],
   zone: AirspaceZone,
   map: L.Map
 ): boolean => {
+  let center: L.LatLngExpression;
+  let radius: number;
+  
   if (zone.geometry.type === 'Circle') {
-    const center = Array.isArray(zone.geometry.coordinates[0])
-      ? [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]]
-      : [zone.geometry.coordinates[1], zone.geometry.coordinates[0]];
+    if (!Array.isArray(zone.geometry.coordinates)) {
+      return false;
+    }
     
-    const distance = map.distance(
-      [point[0], point[1]],
-      center as L.LatLngExpression
-    );
+    if (Array.isArray(zone.geometry.coordinates[0])) {
+      center = [zone.geometry.coordinates[0][1], zone.geometry.coordinates[0][0]];
+    } else {
+      center = [zone.geometry.coordinates[1], zone.geometry.coordinates[0]];
+    }
     
-    return distance <= (zone.geometry.radius || 0);
+    radius = zone.geometry.radius || 1000;
+  } else {
+    // For consistency, use the same calculation as in createZoneCircle
+    // This is a simplified version - all polygon zones are treated as circles
+    let totalLat = 0;
+    let totalLng = 0;
+    let pointCount = 0;
+    
+    if (Array.isArray(zone.geometry.coordinates) && Array.isArray(zone.geometry.coordinates[0])) {
+      if (Array.isArray(zone.geometry.coordinates[0][0])) {
+        zone.geometry.coordinates[0].forEach(point => {
+          if (Array.isArray(point)) {
+            totalLng += point[0];
+            totalLat += point[1];
+            pointCount++;
+          }
+        });
+      } else {
+        totalLng += zone.geometry.coordinates[0][0];
+        totalLat += zone.geometry.coordinates[0][1];
+        pointCount = 1;
+      }
+    }
+    
+    if (pointCount === 0) {
+      return false;
+    }
+    
+    center = [totalLat / pointCount, totalLng / pointCount];
+    
+    // Use the same radius determination as in createZoneCircle
+    radius = 5000;
+    if (zone.type === 'restricted') radius = 3000;
+    else if (zone.type === 'controlled') radius = 5000;
+    else if (zone.type === 'advisory') radius = 4000;
+    else if (zone.type === 'open') radius = 6000;
   }
   
-  // For polygon zones, we'd need a more complex algorithm
-  // This is a simplification
-  return false;
+  const distance = map.distance(
+    [point[0], point[1]],
+    center
+  );
+  
+  return distance <= radius;
 };
 
 // Fetch the GeoJSON outline for Nepal

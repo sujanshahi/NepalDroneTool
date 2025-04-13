@@ -104,12 +104,12 @@ export const aircraft = pgTable("aircraft", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   name: text("name").notNull(),
-  manufacturer: text("manufacturer").notNull(),
-  model: text("model").notNull(),
+  manufacturer: text("manufacturer"),
+  model: text("model"),
   serialNumber: text("serial_number"),
-  weight: text("weight").notNull(), // in grams
-  category: text("category").notNull(), // micro, small, medium, large
-  registrationNumber: text("registration_number"),
+  weight: integer("weight"), // in grams
+  type: text("type"), // micro, small, medium, large
+  maxFlightTime: integer("max_flight_time"), // in minutes
   createdAt: text("created_at").notNull().default(new Date().toISOString()),
   updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
   status: text("status").notNull().default("active"), // active, inactive, maintenance
@@ -122,8 +122,8 @@ export const insertAircraftSchema = createInsertSchema(aircraft).pick({
   model: true,
   serialNumber: true,
   weight: true,
-  category: true,
-  registrationNumber: true,
+  type: true,
+  maxFlightTime: true,
 });
 
 export type InsertAircraft = z.infer<typeof insertAircraftSchema>;

@@ -9,7 +9,7 @@ import {
 } from '@/lib/constants';
 import { airspaceZones } from '@/data/airspaceData';
 import { AirspaceZone, MapControls } from '@/lib/types';
-import { setupCustomMarkerIcon, createCircleZone, createPolygonZone, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
+import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
 import { Layers, HelpCircle, Focus, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -133,13 +133,9 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
         return; // Skip if this layer type is turned off
       }
       
-      if (zone.geometry.type === 'Circle') {
-        const circleLayer = createCircleZone(zone, handleZoneClick);
-        if (circleLayer) zonesLayerRef.current.addLayer(circleLayer);
-      } else if (zone.geometry.type === 'Polygon') {
-        const polygonLayer = createPolygonZone(zone, handleZoneClick);
-        if (polygonLayer) zonesLayerRef.current.addLayer(polygonLayer);
-      }
+      // Convert all zones to circular representation
+      const circleLayer = createZoneCircle(zone, handleZoneClick);
+      if (circleLayer) zonesLayerRef.current.addLayer(circleLayer);
     });
     
   }, [mapControls.layers]);
