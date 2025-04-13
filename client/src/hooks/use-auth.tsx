@@ -30,76 +30,90 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<SelectUser | null, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
+  
+  // Create a mock user instead of fetching from the API
+  const mockUser: SelectUser = {
+    id: 1,
+    username: 'demo_user',
+    password: '', // empty password since this is just a mock
+    email: 'demo@example.com',
+    fullName: 'Demo User',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    role: 'user'
+  };
+  
+  // Bypass the API call and set a static mock user
+  const user = mockUser;
+  const error = null;
+  const isLoading = false;
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
-    },
-    onSuccess: (userData) => {
-      queryClient.setQueryData(["/api/user"], userData);
+  // Create mock mutations that don't make API calls
+  const loginMutation = {
+    mutate: () => {
+      console.log('Login bypassed');
       toast({
         title: "Login successful",
-        description: `Welcome back, ${userData.username}!`,
+        description: `Welcome back, ${mockUser.username}!`,
       });
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid credentials",
-        variant: "destructive",
-      });
-    },
-  });
+    isPending: false,
+    error: null,
+    data: undefined,
+    mutateAsync: async () => mockUser,
+    reset: () => {},
+    status: 'idle',
+    variables: undefined,
+    context: undefined,
+    isError: false,
+    isIdle: true,
+    isPaused: false,
+    isSuccess: false,
+  } as unknown as UseMutationResult<Omit<SelectUser, 'password'>, Error, LoginData>;
 
-  const registerMutation = useMutation({
-    mutationFn: async (credentials: z.infer<typeof insertUserSchema>) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
-    },
-    onSuccess: (userData) => {
-      queryClient.setQueryData(["/api/user"], userData);
+  const registerMutation = {
+    mutate: () => {
+      console.log('Registration bypassed');
       toast({
         title: "Registration successful",
-        description: `Welcome, ${userData.username}!`,
+        description: `Welcome, ${mockUser.username}!`,
       });
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message || "Unable to create account",
-        variant: "destructive",
-      });
-    },
-  });
+    isPending: false,
+    error: null,
+    data: undefined,
+    mutateAsync: async () => mockUser,
+    reset: () => {},
+    status: 'idle',
+    variables: undefined,
+    context: undefined,
+    isError: false,
+    isIdle: true,
+    isPaused: false,
+    isSuccess: false,
+  } as unknown as UseMutationResult<Omit<SelectUser, 'password'>, Error, z.infer<typeof insertUserSchema>>;
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+  const logoutMutation = {
+    mutate: () => {
+      console.log('Logout bypassed');
       toast({
         title: "Logged out",
         description: "You have successfully logged out",
       });
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+    isPending: false,
+    error: null,
+    data: undefined,
+    mutateAsync: async () => {},
+    reset: () => {},
+    status: 'idle',
+    variables: undefined,
+    context: undefined,
+    isError: false,
+    isIdle: true,
+    isPaused: false,
+    isSuccess: false,
+  } as unknown as UseMutationResult<void, Error, void>;
 
   return (
     <AuthContext.Provider
