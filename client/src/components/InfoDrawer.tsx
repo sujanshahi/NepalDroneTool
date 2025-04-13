@@ -46,16 +46,23 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
     };
   }, [isOpen, onClose]);
   
-  if (!isOpen) return null;
+  // On mobile, only show when open
+  // On desktop, keep it visible as a side panel (similar to reference image)
+  if (!isOpen && window.innerWidth < 768) return null;
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-end" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className={`${isOpen ? 'fixed inset-0 bg-black bg-opacity-30 z-50' : ''} 
+                flex justify-end md:relative md:bg-transparent`} 
+      onClick={(e) => e.stopPropagation()}
+    >
       <div 
         ref={drawerRef}
-        className="relative right-0 top-0 h-full w-full md:w-96 bg-white shadow-lg overflow-y-auto"
+        className={`relative right-0 top-0 h-full ${isOpen ? 'w-full md:w-96' : 'w-0 md:w-80'} 
+                    bg-white shadow-lg overflow-y-auto transition-all duration-300`}
         style={{ 
           maxWidth: '100vw',
-          animation: 'slideIn 0.3s ease-out'
+          animation: isOpen ? 'slideIn 0.3s ease-out' : 'none'
         }}
       >
         <div className="sticky top-0 z-10 bg-white p-5 border-b border-gray-200">

@@ -266,16 +266,28 @@ const HomePage: React.FC = () => {
             </div>
           )}
           
-          {/* Map area */}
-          <div className="flex-grow">
-            <MapView 
-              onOpenInfoDrawer={handleOpenInfoDrawer}
-              onCursorPositionChange={handleCursorPositionChange}
-            />
+          {/* Central content with map */}
+          <div className="flex-grow flex">
+            {/* Map area */}
+            <div className="flex-grow relative">
+              <MapView 
+                onOpenInfoDrawer={handleOpenInfoDrawer}
+                onCursorPositionChange={handleCursorPositionChange}
+              />
+            </div>
+            
+            {/* Info drawer that shows on the right side of the map */}
+            {!showOnlyMap && (
+              <InfoDrawer 
+                isOpen={isInfoDrawerOpen} 
+                onClose={handleCloseInfoDrawer} 
+                selectedZone={selectedZone}
+              />
+            )}
           </div>
           
-          {/* Right sidebar - only shown when not in map-only mode */}
-          {!showOnlyMap && (
+          {/* Right sidebar with flight plan controls - only shown when not in map-only mode */}
+          {!showOnlyMap && !isInfoDrawerOpen && (
             <div className="w-80 bg-white shadow-lg overflow-y-auto border-l border-gray-200">
               <MapSidebar
                 cursorPosition={cursorPosition}
@@ -291,11 +303,14 @@ const HomePage: React.FC = () => {
         </div>
       </div>
       
-      <InfoDrawer 
-        isOpen={isInfoDrawerOpen} 
-        onClose={handleCloseInfoDrawer} 
-        selectedZone={selectedZone}
-      />
+      {/* Mobile-only InfoDrawer that shows as full-screen overlay */}
+      {showOnlyMap && (
+        <InfoDrawer 
+          isOpen={isInfoDrawerOpen} 
+          onClose={handleCloseInfoDrawer} 
+          selectedZone={selectedZone}
+        />
+      )}
     </div>
   );
 };

@@ -436,26 +436,27 @@ const MapView: React.FC<MapViewProps> = ({
         </div>
         
         <div className="p-3 border-t border-gray-200 bg-white">
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}`, borderRadius: '2px' }}></div>
-              <span>Restricted Airspace</span>
+          <div className="flex flex-wrap items-center justify-between text-xs">
+            <div className="flex gap-3">
+              <div className="flex items-center px-1.5 py-1 bg-[#e74c3c] text-white rounded-sm">
+                <span>Restricted Airspace</span>
+              </div>
+              <div className="flex items-center px-1.5 py-1 bg-[#e67e22] text-white rounded-sm">
+                <span>Controlled Airspace</span>
+              </div>
+              <div className="flex items-center px-1.5 py-1 bg-[#3498db] text-white rounded-sm">
+                <span>Advisory Area</span>
+              </div>
+              <div className="flex items-center px-1.5 py-1 bg-[#2ecc71] text-white rounded-sm">
+                <span>Open Airspace</span>
+              </div>
+              <div className="flex items-center px-1.5 py-1 bg-gray-100 rounded-sm">
+                <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" alt="Marker" style={{ width: '16px', height: '16px' }} className="mr-1" />
+                <span>Selected Location</span>
+              </div>
             </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}`, borderRadius: '2px' }}></div>
-              <span>Controlled Airspace</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}`, borderRadius: '2px' }}></div>
-              <span>Advisory Area</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}`, borderRadius: '2px' }}></div>
-              <span>Open Airspace</span>
-            </div>
-            <div className="flex items-center">
-              <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" alt="Marker" style={{ width: '16px', height: '16px' }} className="mr-2" />
-              <span>Selected Location</span>
+            <div className="flex gap-2 items-center">
+              <span>© Leaflet | Map data © Google</span>
             </div>
           </div>
         </div>
