@@ -1,7 +1,13 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAirspaceZoneSchema, insertRegulationSchema, insertFlightPlanSchema, insertAircraftSchema } from "@shared/schema";
+import { 
+  insertAirspaceZoneSchema, 
+  insertRegulationSchema, 
+  insertFlightPlanSchema, 
+  insertAircraftSchema,
+  insertFlightLogSchema
+} from "@shared/schema";
 import { setupAuth } from "./auth";
 import { ZodError } from "zod";
 
@@ -346,6 +352,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const success = await storage.deleteAircraft(id);
+      res.status(204).end();
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+
+  // Flight Logs routes - all are protected and require authentication
+  app.get('/api/flight-logs', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const userId = req.user?.id;
+      const flightLogs = await storage.getFlightLogsByUserId(userId);
+      res.json(flightLogs);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+
+  app.get('/api/flight-logs/flight-plan/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const flightPlanId = parseInt(req.params.id);
+      // Get the flight plan to verify ownership
+      const flightPlan = await storage.getFlightPlan(flightPlanId);
+      
+      if (!flightPlan) {
+        return res.status(404).json({ error: "Flight plan not found" });
+      }
+      
+      // Ensure user can only access their own flight plan's logs
+      if (flightPlan.userId !== req.user?.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const logs = await storage.getFlightLogsByFlightPlanId(flightPlanId);
+      res.json(logs);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+
+  app.post('/api/flight-logs', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // Ensure log belongs to authenticated user
+      const data = { ...req.body, userId: req.user?.id };
+      
+      // If there's a flight plan ID, verify that the user owns it
+      if (data.flightPlanId) {
+        const flightPlan = await storage.getFlightPlan(data.flightPlanId);
+        if (!flightPlan) {
+          return res.status(404).json({ error: "Flight plan not found" });
+        }
+        
+        if (flightPlan.userId !== req.user?.id) {
+          return res.status(403).json({ error: "Access denied to the flight plan" });
+        }
+      }
+      
+      // Validate request body against schema
+      const validatedData = insertFlightLogSchema.parse(data);
+      
+      // Create flight log with validated data
+      const flightLog = await storage.createFlightLog(validatedData);
+      res.status(201).json(flightLog);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+
+  app.get('/api/flight-logs/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const flightLog = await storage.getFlightLog(parseInt(req.params.id));
+      
+      if (!flightLog) {
+        return res.status(404).json({ error: "Flight log not found" });
+      }
+      
+      // Ensure user can only access their own flight logs
+      if (flightLog.userId !== req.user?.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      res.json(flightLog);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+
+  app.put('/api/flight-logs/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const flightLog = await storage.getFlightLog(id);
+      
+      if (!flightLog) {
+        return res.status(404).json({ error: "Flight log not found" });
+      }
+      
+      // Ensure user can only update their own flight logs
+      if (flightLog.userId !== req.user?.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const updatedLog = await storage.updateFlightLog(id, req.body);
+      res.json(updatedLog);
+    } catch (error) {
+      handleError(res, error);
+    }
+  });
+
+  app.delete('/api/flight-logs/:id', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const flightLog = await storage.getFlightLog(id);
+      
+      if (!flightLog) {
+        return res.status(404).json({ error: "Flight log not found" });
+      }
+      
+      // Ensure user can only delete their own flight logs
+      if (flightLog.userId !== req.user?.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const success = await storage.deleteFlightLog(id);
       res.status(204).end();
     } catch (error) {
       handleError(res, error);

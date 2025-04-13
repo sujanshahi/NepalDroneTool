@@ -184,6 +184,38 @@ export class PgStorage implements IStorage {
     const result = await db.insert(regulations).values(regulation).returning();
     return result[0];
   }
+  
+  // Flight log operations
+  async getFlightLog(id: number): Promise<FlightLog | undefined> {
+    const result = await db.select().from(flightLogs).where(eq(flightLogs.id, id));
+    return result[0];
+  }
+  
+  async getFlightLogsByUserId(userId: number): Promise<FlightLog[]> {
+    return await db.select().from(flightLogs).where(eq(flightLogs.userId, userId));
+  }
+  
+  async getFlightLogsByFlightPlanId(flightPlanId: number): Promise<FlightLog[]> {
+    return await db.select().from(flightLogs).where(eq(flightLogs.flightPlanId, flightPlanId));
+  }
+  
+  async createFlightLog(log: InsertFlightLog): Promise<FlightLog> {
+    const result = await db.insert(flightLogs).values(log).returning();
+    return result[0];
+  }
+  
+  async updateFlightLog(id: number, log: Partial<FlightLog>): Promise<FlightLog | undefined> {
+    const result = await db.update(flightLogs)
+      .set(log)
+      .where(eq(flightLogs.id, id))
+      .returning();
+    return result[0];
+  }
+  
+  async deleteFlightLog(id: number): Promise<boolean> {
+    const result = await db.delete(flightLogs).where(eq(flightLogs.id, id)).returning();
+    return result.length > 0;
+  }
 }
 
 // Create a singleton instance of the storage
