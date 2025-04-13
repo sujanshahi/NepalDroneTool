@@ -92,18 +92,33 @@ const AircraftPage: React.FC = () => {
   });
 
   // Fetch user's aircraft
-  const { data: aircraft, isLoading, isError } = useQuery<Aircraft[]>({
+  const { 
+    data: aircraft = [], // provide default empty array to fix TypeScript errors
+    isLoading, 
+    isError 
+  } = useQuery<Aircraft[]>({
     queryKey: ['/api/aircraft'],
     queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
+  // Log authentication status for debugging
+  console.log('Auth state:', { user, isLoading, isError });
+
   // Create aircraft mutation
   const createAircraftMutation = useMutation({
     mutationFn: async (data: z.infer<typeof aircraftFormSchema>) => {
-      const res = await apiRequest('POST', '/api/aircraft', data);
-      return await res.json();
+      console.log('Creating aircraft with data:', data);
+      try {
+        const res = await apiRequest('POST', '/api/aircraft', data);
+        console.log('Aircraft creation response:', res);
+        return await res.json();
+      } catch (error) {
+        console.error('Aircraft creation error:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Aircraft successfully created:', data);
       toast({
         title: 'Aircraft Added',
         description: 'Your aircraft has been successfully added.',
@@ -113,6 +128,7 @@ const AircraftPage: React.FC = () => {
       setIsDialogOpen(false);
     },
     onError: (error: Error) => {
+      console.error('Aircraft creation mutation error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to add aircraft',
