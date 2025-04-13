@@ -122,8 +122,8 @@ export default function FlightLogsPage() {
   };
 
   return (
-    <div className="container py-8 max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
+    <div className="mx-auto px-4 py-8 max-w-7xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold">Flight Logs</h1>
           <p className="text-muted-foreground">Track your drone flight history</p>
@@ -134,7 +134,7 @@ export default function FlightLogsPage() {
       </div>
 
       <div className="mb-6">
-        <div className="relative w-full md:w-96">
+        <div className="relative w-full max-w-md">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search flight logs..."
@@ -146,7 +146,7 @@ export default function FlightLogsPage() {
       </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap overflow-x-auto">
           <TabsTrigger value="all">All Logs</TabsTrigger>
           <TabsTrigger value="recent">Recent (30 days)</TabsTrigger>
           <TabsTrigger value="with-plan">With Flight Plan</TabsTrigger>
@@ -249,15 +249,15 @@ function renderFlightLogList(
   };
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 gap-4">
       {flightLogs.map((log) => (
-        <Card key={log.id}>
-          <CardHeader>
-            <div className="flex justify-between items-start">
+        <Card key={log.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
               <div>
                 <CardTitle className="flex items-center">
-                  <PlaneTakeoff className="mr-2 h-5 w-5" />
-                  {getAircraftName(log.aircraftId)}
+                  <PlaneTakeoff className="mr-2 h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">{getAircraftName(log.aircraftId)}</span>
                 </CardTitle>
                 <CardDescription className="mt-1">
                   {log.flightPlanId ? (
@@ -269,37 +269,36 @@ function renderFlightLogList(
                   )}
                 </CardDescription>
               </div>
-              <div className="text-right">
-                <div className="text-sm font-medium">
+              <div className="text-sm sm:text-right">
+                <div className="font-medium">
                   {new Date(log.startTime).toLocaleDateString()}
                 </div>
                 {log.duration && (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-muted-foreground">
                     Duration: {formatDuration(log.duration)}
                   </div>
                 )}
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <div className="flex items-start">
-                  <User className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
+                  <User className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
                     <div className="font-medium">Pilot</div>
-                    <div>{log.pilotName}</div>
+                    <div className="truncate">{log.pilotName}</div>
                   </div>
                 </div>
                 
                 {log.observers && (
                   <div className="flex items-start">
-                    <Eye className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
+                    <Eye className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div>
                       <div className="font-medium">Observers</div>
-                      <div>
+                      <div className="line-clamp-2">
                         {(() => {
-                          // Use IIFE to handle complex expressions safely
                           if (Array.isArray(log.observers)) {
                             return log.observers.join(', ');
                           } else if (typeof log.observers === 'string') {
@@ -320,10 +319,10 @@ function renderFlightLogList(
                 
                 {log.weatherConditions && (
                   <div className="flex items-start">
-                    <CloudSun className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
+                    <CloudSun className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div>
                       <div className="font-medium">Weather</div>
-                      <div>{log.weatherConditions}</div>
+                      <div className="line-clamp-2">{log.weatherConditions}</div>
                     </div>
                   </div>
                 )}
@@ -331,7 +330,7 @@ function renderFlightLogList(
               
               <div className="space-y-2">
                 <div className="flex items-start">
-                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
+                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
                     <div className="font-medium">Date & Time</div>
                     <div>From: {new Date(log.startTime).toLocaleString()}</div>
@@ -341,29 +340,30 @@ function renderFlightLogList(
                 
                 {log.notes && (
                   <div className="flex items-start">
-                    <FileText className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
+                    <FileText className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div>
                       <div className="font-medium">Notes</div>
-                      <div className="text-sm">{log.notes}</div>
+                      <div className="text-sm line-clamp-3">{log.notes}</div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end space-x-2">
-            <Button variant="outline" asChild>
+          <CardFooter className="flex flex-wrap justify-end gap-2 pt-2">
+            <Button variant="outline" asChild size="sm">
               <Link to={`/flight-logs/${log.id}`}>
-                <Eye className="mr-2 h-4 w-4" /> View Details
+                <Eye className="mr-2 h-4 w-4" /> View
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild size="sm">
               <Link to={`/flight-logs/${log.id}/edit`}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
               </Link>
             </Button>
             <Button 
-              variant="outline" 
+              variant="outline"
+              size="sm"
               onClick={() => handleDelete(log.id)}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Delete

@@ -64,8 +64,8 @@ export default function FlightPlansPage() {
   };
 
   return (
-    <div className="container py-8 max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
+    <div className="mx-auto px-4 py-8 max-w-7xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold">Flight Plans</h1>
           <p className="text-muted-foreground">Manage your drone flight plans</p>
@@ -76,7 +76,7 @@ export default function FlightPlansPage() {
       </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap overflow-x-auto">
           <TabsTrigger value="all">All Plans</TabsTrigger>
           <TabsTrigger value="draft">Drafts</TabsTrigger>
           <TabsTrigger value="planned">Planned</TabsTrigger>
@@ -173,28 +173,28 @@ function renderFlightPlanList(
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
       {flightPlans.map((plan) => (
-        <Card key={plan.id} className="flex flex-col h-full">
-          <CardHeader>
+        <Card key={plan.id} className="flex flex-col h-full shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
-              <CardTitle className="mr-2 text-lg">{plan.name}</CardTitle>
+              <CardTitle className="mr-2 text-lg truncate">{plan.name}</CardTitle>
               {plan.status && getStatusBadge(plan.status)}
             </div>
             <CardDescription className="flex items-center text-sm">
-              <CalendarIcon className="mr-1 h-3 w-3" />
+              <CalendarIcon className="mr-1 h-3 w-3 flex-shrink-0" />
               {formatDistance(new Date(plan.createdAt), new Date(), { addSuffix: true })}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-grow">
+          <CardContent className="flex-grow pb-4">
             <div className="space-y-2 text-sm">
               {plan.location && (
                 <div className="flex items-start">
-                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
-                  <span>
+                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <span className="line-clamp-2">
                     {(() => {
-                      if (plan.location && typeof plan.location === 'object' && plan.location !== null) {
-                        const loc = plan.location as any;
+                      if (typeof plan.location === 'object' && plan.location !== null) {
+                        const loc = plan.location as Record<string, any>;
                         return loc.address ? String(loc.address) : 'Location coordinates set';
                       }
                       return 'Location set';
@@ -203,25 +203,28 @@ function renderFlightPlanList(
                 </div>
               )}
               {plan.flight && (
-                <div>
-                  <span className="text-muted-foreground">Altitude:</span>{' '}
-                  {(() => {
-                    if (plan.flight && typeof plan.flight === 'object' && plan.flight !== null) {
-                      const flight = plan.flight as any;
-                      return flight.altitude ? `${flight.altitude}m` : 'Set';
-                    }
-                    return 'Set';
-                  })()}
+                <div className="flex items-center">
+                  <span className="text-muted-foreground mr-1">Altitude:</span>
+                  <span>
+                    {(() => {
+                      if (typeof plan.flight === 'object' && plan.flight !== null) {
+                        const flight = plan.flight as Record<string, any>;
+                        return flight.altitude ? `${flight.altitude}m` : 'Set';
+                      }
+                      return 'Set';
+                    })()}
+                  </span>
                 </div>
               )}
               {plan.category && (
-                <div>
-                  <span className="text-muted-foreground">Category:</span> {plan.category}
+                <div className="flex items-center">
+                  <span className="text-muted-foreground mr-1">Category:</span>
+                  <span>{plan.category}</span>
                 </div>
               )}
             </div>
           </CardContent>
-          <CardFooter className="grid grid-cols-2 gap-2">
+          <CardFooter className="pt-2 grid grid-cols-2 gap-2">
             <Button variant="outline" asChild className="w-full">
               <Link to={`/flight-plans/${plan.id}`}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
