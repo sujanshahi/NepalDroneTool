@@ -102,76 +102,97 @@ export const FlightPlanProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // Generate flight results based on current data
   const generateResults = () => {
+    console.log("Generating flight assessment results...");
+    console.log("Current flight plan data:", flightPlan);
+    
+    // Check if we have all required data
     if (!flightPlan.intent || !flightPlan.location || !flightPlan.flight) {
+      console.error("Missing required flight plan data:", { 
+        hasIntent: !!flightPlan.intent, 
+        hasLocation: !!flightPlan.location, 
+        hasFlight: !!flightPlan.flight 
+      });
       return;
     }
     
     const { intent, location, flight } = flightPlan;
     
-    // Get all zones for the selected location
-    const zones = location.coordinates 
-      ? getZonesContainingPoint(location.coordinates[0], location.coordinates[1])
-      : [];
-    
-    const zoneTypes = zones.map(zone => zone.type);
-    
-    // Check if flight is permitted based on the most restrictive zone
-    const mostRestrictiveZone = zoneTypes.includes("restricted") 
-      ? "restricted" 
-      : zoneTypes.includes("controlled")
-        ? "controlled"
-        : zoneTypes.includes("advisory")
-          ? "advisory"
-          : "open";
-    
-    const isPermitted = isFlightPermittedInZone(mostRestrictiveZone);
-    
-    // Get required permissions
-    const permissionsRequired = getRequiredPermissions(zoneTypes);
-    
-    // Get applicable regulations
-    const applicableRegulations = getApplicableRegulations(
-      intent.dronePilotType, 
-      zoneTypes,
-      {
-        altitude: flight.altitude,
-        isNightOperation: flight.isNightOperation,
-        isOverPopulatedArea: location.locationType === "Built-up area (city, town)" || location.locationType === "Populated area (village, settlement)"
+    try {
+      // Get all zones for the selected location
+      const zones = location.coordinates 
+        ? getZonesContainingPoint(location.coordinates[0], location.coordinates[1])
+        : [];
+      
+      console.log("Zones at selected location:", zones);
+      
+      const zoneTypes = zones.map(zone => zone.type);
+      
+      // Check if flight is permitted based on the most restrictive zone
+      const mostRestrictiveZone = zoneTypes.includes("restricted") 
+        ? "restricted" 
+        : zoneTypes.includes("controlled")
+          ? "controlled"
+          : zoneTypes.includes("advisory")
+            ? "advisory"
+            : "open";
+      
+      const isPermitted = isFlightPermittedInZone(mostRestrictiveZone);
+      console.log("Flight permitted:", isPermitted, "in", mostRestrictiveZone, "zone");
+      
+      // Get required permissions
+      const permissionsRequired = getRequiredPermissions(zoneTypes);
+      console.log("Permissions required:", permissionsRequired);
+      
+      // Get applicable regulations
+      const applicableRegulations = getApplicableRegulations(
+        intent.dronePilotType, 
+        zoneTypes,
+        {
+          altitude: flight.altitude,
+          isNightOperation: flight.isNightOperation,
+          isOverPopulatedArea: location.locationType === "Built-up area (city, town)" || location.locationType === "Populated area (village, settlement)"
+        }
+      );
+      console.log("Applicable regulations:", applicableRegulations);
+      
+      // Generate advisory messages
+      const advisoryMessages: string[] = [];
+      
+      if (flight.altitude > 120) {
+        advisoryMessages.push("Your planned altitude exceeds the maximum allowed limit of 120 meters.");
       }
-    );
-    
-    // Generate advisory messages
-    const advisoryMessages: string[] = [];
-    
-    if (flight.altitude > 120) {
-      advisoryMessages.push("Your planned altitude exceeds the maximum allowed limit of 120 meters.");
+      
+      if (flight.isNightOperation) {
+        advisoryMessages.push("Night operations require special authorization from CAA Nepal.");
+      }
+      
+      if (mostRestrictiveZone === "restricted") {
+        advisoryMessages.push("This location is in a restricted zone. Flying is not permitted without special authorization.");
+      } else if (mostRestrictiveZone === "controlled") {
+        advisoryMessages.push("This location is in a controlled airspace. Permission required before flight.");
+      } else if (mostRestrictiveZone === "advisory") {
+        advisoryMessages.push("This location is in an advisory zone. Special considerations apply.");
+      }
+      
+      if (intent.droneWeight === "Over 2kg") {
+        advisoryMessages.push("Drones over 2kg must be registered with CAA Nepal.");
+      }
+      
+      // Create results object
+      const results: FlightResults = {
+        isPermitted,
+        permissionsRequired,
+        regulationsApplicable: applicableRegulations.map(reg => reg.title),
+        advisoryMessages
+      };
+      
+      console.log("Final flight assessment results:", results);
+      
+      // Update the flight plan with the results
+      setFlightPlan({ ...flightPlan, results });
+    } catch (error) {
+      console.error("Error generating flight assessment results:", error);
     }
-    
-    if (flight.isNightOperation) {
-      advisoryMessages.push("Night operations require special authorization from CAA Nepal.");
-    }
-    
-    if (mostRestrictiveZone === "restricted") {
-      advisoryMessages.push("This location is in a restricted zone. Flying is not permitted without special authorization.");
-    } else if (mostRestrictiveZone === "controlled") {
-      advisoryMessages.push("This location is in a controlled airspace. Permission required before flight.");
-    } else if (mostRestrictiveZone === "advisory") {
-      advisoryMessages.push("This location is in an advisory zone. Special considerations apply.");
-    }
-    
-    if (intent.droneWeight === "Over 2kg") {
-      advisoryMessages.push("Drones over 2kg must be registered with CAA Nepal.");
-    }
-    
-    // Create results object
-    const results: FlightResults = {
-      isPermitted,
-      permissionsRequired,
-      regulationsApplicable: applicableRegulations.map(reg => reg.title),
-      advisoryMessages
-    };
-    
-    setFlightPlan({ ...flightPlan, results });
   };
 
   // Check if a step is complete

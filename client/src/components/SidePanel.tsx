@@ -40,9 +40,22 @@ const SidePanel: React.FC = () => {
   // Handle next button click
   const handleNext = () => {
     if (flightPlan.step === 3) {
+      // Call generateResults before moving to the next step
+      // This ensures flight assessment is created before showing results page
       generateResults();
+      
+      // Add delay to ensure results are generated before UI transition
+      setTimeout(() => {
+        nextStep();
+      }, 300);
+    } else {
+      // For other steps, just move to the next step
+      nextStep();
     }
-    nextStep();
+    
+    // Debug output
+    console.log("Moving to next step. Current step:", flightPlan.step);
+    console.log("Flight plan data:", flightPlan);
   };
   
   // Handle intent form changes
