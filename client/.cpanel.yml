@@ -1,0 +1,8 @@
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/himala34/public_html
+    - cd client
+    - npm install
+    - npm run build
+    - rm -rf $DEPLOYPATH/*
+    - cp -r build/* $DEPLOYPATH
