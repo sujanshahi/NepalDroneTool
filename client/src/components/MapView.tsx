@@ -13,6 +13,9 @@ import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeoc
 import { Layers, HelpCircle, Focus, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+// Import CSS for Leaflet
+import 'leaflet/dist/leaflet.css';
+
 const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = ({ onOpenInfoDrawer }) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
@@ -70,7 +73,7 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
         "Topographic": topoLayer
       };
       
-      L.control.layers(baseMaps, null, {position: 'topright'}).addTo(map);
+      L.control.layers(baseMaps, {}, {position: 'topright'}).addTo(map);
       
       // Add custom zoom control to top left
       L.control.zoom({position: 'topleft'}).addTo(map);
