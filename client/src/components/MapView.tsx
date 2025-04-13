@@ -88,6 +88,17 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
         // Add marker at clicked location
         await handleLocationSelect([lat, lng]);
       });
+      
+      // Track cursor position on mouse move
+      map.on('mousemove', (e) => {
+        const { lat, lng } = e.latlng;
+        setCursorPosition([lat, lng]);
+      });
+      
+      // Clear cursor position when mouse leaves the map
+      map.on('mouseout', () => {
+        setCursorPosition(null);
+      });
     }
     
     // Cleanup on unmount
@@ -249,144 +260,198 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
   };
+
+  // Handle sidebar layer toggle
+  const handleLayerToggle = (layerName: string, checked: boolean) => {
+    setActiveLayers(prev => ({
+      ...prev,
+      [layerName]: checked
+    }));
+  };
+
+  // Handle map type change
+  const handleMapTypeChange = (type: string) => {
+    setMapType(type);
+    // If we were to implement this fully, we would change the map layer here
+  };
+
+  // Handle center change from coordinates
+  const handleCenterChange = (center: [number, number]) => {
+    if (mapRef.current) {
+      mapRef.current.setView(center, mapRef.current.getZoom());
+    }
+  };
+
+  // Use browser geolocation
+  const handleUseMyLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          if (mapRef.current) {
+            mapRef.current.setView([latitude, longitude], 15);
+            handleLocationSelect([latitude, longitude]);
+          }
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser');
+    }
+  };
   
   return (
-    <div 
-      ref={mapContainerRef}
-      className={`map-container bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ${
-        isFullScreen 
-          ? 'fixed inset-0 z-50 rounded-none' 
-          : 'w-full md:w-3/5 lg:w-2/3'
-      }`}
-    >
-      <div className="p-3 border-b border-gray-200 flex justify-between items-center">
-        <h2 className="font-heading font-semibold text-gray-700">Interactive Map</h2>
-        <div className="flex space-x-2">
-          <Button
-            size="icon"
-            variant="outline"
-            className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-            title="Center Map on Nepal"
-            onClick={centerOnNepal}
-          >
-            <Focus className="h-5 w-5 text-gray-700" />
-          </Button>
-          
-          <div className="relative">
+    <div className={`flex ${isFullScreen ? 'fixed inset-0 z-50' : 'min-h-[600px]'}`}>
+      {/* Map Sidebar */}
+      <MapSidebar 
+        cursorPosition={cursorPosition}
+        onCenterChange={handleCenterChange}
+        onLayerToggle={handleLayerToggle}
+        onUseMyLocation={handleUseMyLocation}
+        onMapTypeChange={handleMapTypeChange}
+        activeLayers={activeLayers}
+        mapType={mapType}
+      />
+
+      <div 
+        ref={mapContainerRef}
+        className={`map-container bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ${
+          isFullScreen 
+            ? 'flex-1 rounded-none' 
+            : 'flex-1'
+        }`}
+      >
+        <div className="p-3 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="font-heading font-semibold text-gray-700">Interactive Map</h2>
+          <div className="flex space-x-2">
             <Button
               size="icon"
               variant="outline"
               className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-              title="Toggle Layers"
-              onClick={() => setMapControls(prev => ({ ...prev, isDrawerOpen: !prev.isDrawerOpen }))}
+              title="Center Map on Nepal"
+              onClick={centerOnNepal}
             >
-              <Layers className="h-5 w-5 text-gray-700" />
+              <Focus className="h-5 w-5 text-gray-700" />
             </Button>
             
-            {mapControls.isDrawerOpen && (
-              <div className="absolute right-0 top-10 bg-white shadow-md rounded-md p-3 z-10 w-48">
-                <h3 className="font-medium text-sm mb-2">Toggle Layers</h3>
-                
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={mapControls.layers.restricted}
-                      onChange={() => toggleLayer('restricted')}
-                      className="mr-2"
-                    />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}` }}></div>
-                    {MAP_LAYERS.RESTRICTED}
-                  </label>
+            <div className="relative">
+              <Button
+                size="icon"
+                variant="outline"
+                className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
+                title="Toggle Layers"
+                onClick={() => setMapControls(prev => ({ ...prev, isDrawerOpen: !prev.isDrawerOpen }))}
+              >
+                <Layers className="h-5 w-5 text-gray-700" />
+              </Button>
+              
+              {mapControls.isDrawerOpen && (
+                <div className="absolute right-0 top-10 bg-white shadow-md rounded-md p-3 z-10 w-48">
+                  <h3 className="font-medium text-sm mb-2">Toggle Layers</h3>
                   
-                  <label className="flex items-center text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={mapControls.layers.controlled}
-                      onChange={() => toggleLayer('controlled')}
-                      className="mr-2"
-                    />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}` }}></div>
-                    {MAP_LAYERS.CONTROLLED}
-                  </label>
-                  
-                  <label className="flex items-center text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={mapControls.layers.advisory}
-                      onChange={() => toggleLayer('advisory')}
-                      className="mr-2"
-                    />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}` }}></div>
-                    {MAP_LAYERS.ADVISORY}
-                  </label>
-                  
-                  <label className="flex items-center text-sm cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={mapControls.layers.open}
-                      onChange={() => toggleLayer('open')}
-                      className="mr-2"
-                    />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}` }}></div>
-                    {MAP_LAYERS.OPEN}
-                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mapControls.layers.restricted}
+                        onChange={() => toggleLayer('restricted')}
+                        className="mr-2"
+                      />
+                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}` }}></div>
+                      {MAP_LAYERS.RESTRICTED}
+                    </label>
+                    
+                    <label className="flex items-center text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mapControls.layers.controlled}
+                        onChange={() => toggleLayer('controlled')}
+                        className="mr-2"
+                      />
+                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}` }}></div>
+                      {MAP_LAYERS.CONTROLLED}
+                    </label>
+                    
+                    <label className="flex items-center text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mapControls.layers.advisory}
+                        onChange={() => toggleLayer('advisory')}
+                        className="mr-2"
+                      />
+                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}` }}></div>
+                      {MAP_LAYERS.ADVISORY}
+                    </label>
+                    
+                    <label className="flex items-center text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={mapControls.layers.open}
+                        onChange={() => toggleLayer('open')}
+                        className="mr-2"
+                      />
+                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}` }}></div>
+                      {MAP_LAYERS.OPEN}
+                    </label>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            
+            <Button
+              size="icon"
+              variant="outline"
+              className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
+              title="Help"
+              onClick={showHelp}
+            >
+              <HelpCircle className="h-5 w-5 text-gray-700" />
+            </Button>
+            
+            <Button
+              size="icon"
+              variant="outline"
+              className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
+              title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+              onClick={toggleFullScreen}
+            >
+              {isFullScreen ? (
+                <Minimize className="h-5 w-5 text-gray-700" />
+              ) : (
+                <Maximize className="h-5 w-5 text-gray-700" />
+              )}
+            </Button>
           </div>
-          
-          <Button
-            size="icon"
-            variant="outline"
-            className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-            title="Help"
-            onClick={showHelp}
-          >
-            <HelpCircle className="h-5 w-5 text-gray-700" />
-          </Button>
-          
-          <Button
-            size="icon"
-            variant="outline"
-            className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-            title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
-            onClick={toggleFullScreen}
-          >
-            {isFullScreen ? (
-              <Minimize className="h-5 w-5 text-gray-700" />
-            ) : (
-              <Maximize className="h-5 w-5 text-gray-700" />
-            )}
-          </Button>
         </div>
-      </div>
-      
-      <div id="map" className="flex-grow" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : '400px' }}>
-        {/* Map will be initialized here via Leaflet */}
-      </div>
-      
-      <div className="p-3 border-t border-gray-200 bg-white">
-        <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}`, borderRadius: '2px' }}></div>
-            <span>Restricted Airspace</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}`, borderRadius: '2px' }}></div>
-            <span>Controlled Airspace</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}`, borderRadius: '2px' }}></div>
-            <span>Advisory Area</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}`, borderRadius: '2px' }}></div>
-            <span>Open Airspace</span>
-          </div>
-          <div className="flex items-center">
-            <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" alt="Marker" style={{ width: '16px', height: '16px' }} className="mr-2" />
-            <span>Selected Location</span>
+        
+        <div id="map" className="flex-grow" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : '400px' }}>
+          {/* Map will be initialized here via Leaflet */}
+        </div>
+        
+        <div className="p-3 border-t border-gray-200 bg-white">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
+            <div className="flex items-center">
+              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}`, borderRadius: '2px' }}></div>
+              <span>Restricted Airspace</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}`, borderRadius: '2px' }}></div>
+              <span>Controlled Airspace</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}`, borderRadius: '2px' }}></div>
+              <span>Advisory Area</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}`, borderRadius: '2px' }}></div>
+              <span>Open Airspace</span>
+            </div>
+            <div className="flex items-center">
+              <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" alt="Marker" style={{ width: '16px', height: '16px' }} className="mr-2" />
+              <span>Selected Location</span>
+            </div>
           </div>
         </div>
       </div>

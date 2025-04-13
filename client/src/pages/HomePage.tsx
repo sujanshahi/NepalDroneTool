@@ -22,9 +22,15 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Header />
       
-      <main className="container mx-auto px-4 py-4 flex-grow flex flex-col md:flex-row">
-        <SidePanel />
-        <MapView onOpenInfoDrawer={handleOpenInfoDrawer} />
+      <main className="flex-grow flex flex-col">
+        <div className="flex flex-col md:flex-row h-full">
+          <div className="w-full">
+            <MapView onOpenInfoDrawer={handleOpenInfoDrawer} />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-4">
+          <SidePanel />
+        </div>
       </main>
       
       <InfoDrawer 
