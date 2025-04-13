@@ -92,7 +92,7 @@ const AircraftPage: React.FC = () => {
   // Fetch user's aircraft
   const { data: aircraft, isLoading, isError } = useQuery<Aircraft[]>({
     queryKey: ['/api/aircraft'],
-    queryFn: getQueryFn({ on401: 'throw' }),
+    queryFn: getQueryFn({ on401: 'returnNull' }),
   });
 
   // Create aircraft mutation
