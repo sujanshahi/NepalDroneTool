@@ -85,7 +85,9 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       markersLayerRef.current = L.layerGroup().addTo(map);
       zonesLayerRef.current = L.layerGroup().addTo(map);
       
-      // Load Nepal outline
+      // Remove Nepal outline to make the map clearer
+      // We're commenting this out as per user request to remove the outline
+      /*
       fetchNepalOutline()
         .then(nepalFeature => {
           nepalOutlineRef.current = L.geoJSON(nepalFeature, {
@@ -101,6 +103,7 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
           }).addTo(map);
         })
         .catch(error => console.error('Error loading Nepal outline:', error));
+      */
       
       // Store map reference
       mapRef.current = map;

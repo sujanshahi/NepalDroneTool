@@ -49,13 +49,12 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-end" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end info-drawer-backdrop" onClick={(e) => e.stopPropagation()}>
       <div 
         ref={drawerRef}
-        className="relative right-0 top-0 h-full w-full md:w-96 bg-white shadow-lg overflow-y-auto"
+        className="relative right-0 top-0 h-full w-full sm:w-3/4 md:w-96 bg-white shadow-lg overflow-y-auto info-drawer"
         style={{ 
-          maxWidth: '100vw',
-          animation: 'slideIn 0.3s ease-out'
+          maxWidth: '100vw'
         }}
       >
         <div className="sticky top-0 z-10 bg-white p-5 border-b border-gray-200">
@@ -179,7 +178,7 @@ const InfoDrawer: React.FC<InfoDrawerProps> = ({ isOpen, onClose, selectedZone }
         </div>
       </div>
       
-      {/* Animation is handled through inline styles */}
+      {/* Animation is handled through CSS classes */}
     </div>
   );
 };

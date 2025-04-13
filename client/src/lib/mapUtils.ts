@@ -95,13 +95,32 @@ export const createZoneCircle = (
   // Create the circle with correct params
   const circle = L.circle(center, {
     ...ZONE_STYLES[zone.type],
-    radius: radius
+    radius: radius,
+    stroke: true,
+    weight: 1.5,
+    opacity: 0.7,
+    fillOpacity: 0.25
   });
+  
+  // Add pulse effect for restricted zones
+  if (zone.type === 'restricted') {
+    const pulseOptions = {
+      ...ZONE_STYLES[zone.type],
+      radius: radius + 50,
+      fillOpacity: 0,
+      weight: 3,
+      opacity: 0.3,
+      className: 'pulse-circle'
+    };
+    const pulseCircle = L.circle(center, pulseOptions);
+    return L.layerGroup([circle, pulseCircle]);
+  }
   
   circle.bindPopup(`
     <div class="text-sm">
       <h3 class="font-medium">${zone.name}</h3>
       <p>${zone.description}</p>
+      <p class="text-xs mt-1 font-bold">${zone.type.toUpperCase()}</p>
     </div>
   `);
   

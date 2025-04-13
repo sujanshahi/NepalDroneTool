@@ -12,7 +12,17 @@
   }
 }
 
-/* Glow effect for Nepal outline */
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Glow effect for Nepal outline - kept for optional use later */
 .nepal-border-glow {
   filter: drop-shadow(0 0 6px #DC143C);
   animation: glowing 2s infinite alternate;
@@ -21,6 +31,61 @@
 @keyframes glowing {
   from { filter: drop-shadow(0 0 2px #DC143C); }
   to { filter: drop-shadow(0 0 8px #DC143C); }
+}
+
+/* Make sure the info doesn't overlap with map controls */
+.leaflet-control-container .leaflet-top.leaflet-right {
+  z-index: 999;
+}
+
+/* Improved map styling */
+.leaflet-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px;
+  line-height: 1.5;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-control-zoom a {
+  color: #333;
+  background-color: white;
+  border: none;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #f5f5f5;
+}
+
+.leaflet-control-layers {
+  border: none !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.15) !important;
+}
+
+.leaflet-control-layers-toggle {
+  background-color: white !important;
+}
+
+/* Side panel styling to prevent overlap */
+.info-drawer {
+  animation: slideIn 0.3s ease-out;
+}
+
+.info-drawer-backdrop {
+  animation: fadeIn 0.2s ease-out;
 }
 
 @layer base {
