@@ -325,21 +325,182 @@ const MapView: React.FC<MapViewProps> = ({
     }
   };
   
+  // Keep track of measurement points and line
+  const measurePointsRef = useRef<L.Marker[]>([]);
+  const measureLineRef = useRef<L.Polyline | null>(null);
+  const measureTooltipRef = useRef<L.Tooltip | null>(null);
+  
   // Define new states for map tools
   const [activeMapTool, setActiveMapTool] = useState<string | null>(null);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [drawingEnabled, setDrawingEnabled] = useState(false);
   const [measurementMode, setMeasurementMode] = useState(false);
+  const [measurementResult, setMeasurementResult] = useState<string | null>(null);
 
   // Function to activate a map tool
   const activateMapTool = (toolName: string) => {
+    // First, clean up any active tools
+    cleanupActiveTool();
+    
     if (activeMapTool === toolName) {
       // If tool is already active, deactivate it
       setActiveMapTool(null);
     } else {
       // Activate the new tool and deactivate any other active tool
       setActiveMapTool(toolName);
+      
+      // Initialize the tool
+      if (toolName === 'measure') {
+        startMeasurement();
+      } else if (toolName === 'marker') {
+        enableMarkerPlacement();
+      } else if (toolName === 'circle') {
+        enableCircleDrawing();
+      }
     }
+  };
+  
+  // Clean up active tool resources
+  const cleanupActiveTool = () => {
+    // Clean up measurement
+    if (activeMapTool === 'measure') {
+      cleanupMeasurement();
+    }
+    
+    // Reset all tool states
+    setMeasurementMode(false);
+    setDrawingEnabled(false);
+    setMeasurementResult(null);
+  };
+  
+  // Start measurement mode
+  const startMeasurement = () => {
+    if (!mapRef.current) return;
+    
+    setMeasurementMode(true);
+    setMeasurementResult('Click on the map to start measuring');
+    
+    // Create custom click handler for measurements
+    const mapInstance = mapRef.current;
+    
+    // Remove existing click handler
+    mapInstance.off('click');
+    
+    // Add measurement click handler
+    mapInstance.on('click', handleMeasurementClick);
+  };
+  
+  // Handle clicks during measurement
+  const handleMeasurementClick = (e: L.LeafletMouseEvent) => {
+    if (!mapRef.current) return;
+    
+    const { lat, lng } = e.latlng;
+    
+    // Create marker at clicked point
+    const marker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: 'measure-point',
+        html: '<div class="w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>',
+        iconSize: [10, 10],
+        iconAnchor: [5, 5]
+      })
+    }).addTo(mapRef.current);
+    
+    // Add marker to our array
+    measurePointsRef.current.push(marker);
+    
+    // If we have at least 2 points, draw/update the line
+    if (measurePointsRef.current.length >= 2) {
+      const points = measurePointsRef.current.map(m => m.getLatLng());
+      
+      // Calculate total distance
+      let totalDistance = 0;
+      for (let i = 1; i < points.length; i++) {
+        totalDistance += points[i-1].distanceTo(points[i]);
+      }
+      
+      // Format distance
+      const distanceText = totalDistance < 1000 
+        ? `${totalDistance.toFixed(1)} m` 
+        : `${(totalDistance / 1000).toFixed(2)} km`;
+      
+      // Update or create line
+      if (measureLineRef.current) {
+        measureLineRef.current.setLatLngs(points);
+      } else {
+        measureLineRef.current = L.polyline(points, {
+          color: '#3b82f6',
+          weight: 3,
+          dashArray: '5, 5',
+          opacity: 0.7
+        }).addTo(mapRef.current);
+      }
+      
+      // Update distance tooltip
+      if (measureTooltipRef.current) {
+        measureTooltipRef.current.setLatLng(points[points.length - 1]);
+        measureTooltipRef.current.setContent(`Distance: ${distanceText}`);
+      } else {
+        measureTooltipRef.current = L.tooltip({
+          permanent: true,
+          direction: 'top',
+          className: 'bg-white px-2 py-1 rounded shadow text-xs',
+          offset: [0, -10]
+        })
+        .setLatLng(points[points.length - 1])
+        .setContent(`Distance: ${distanceText}`)
+        .addTo(mapRef.current);
+      }
+      
+      // Update the measurement result
+      setMeasurementResult(`Measured distance: ${distanceText}`);
+    } else {
+      setMeasurementResult('Click again to measure distance');
+    }
+  };
+  
+  // Clean up measurement
+  const cleanupMeasurement = () => {
+    if (!mapRef.current) return;
+    
+    // Remove markers
+    measurePointsRef.current.forEach(marker => {
+      marker.remove();
+    });
+    measurePointsRef.current = [];
+    
+    // Remove line
+    if (measureLineRef.current) {
+      measureLineRef.current.remove();
+      measureLineRef.current = null;
+    }
+    
+    // Remove tooltip
+    if (measureTooltipRef.current) {
+      measureTooltipRef.current.remove();
+      measureTooltipRef.current = null;
+    }
+    
+    // Reset click handler
+    mapRef.current.off('click');
+    mapRef.current.on('click', async (e) => {
+      const { lat, lng } = e.latlng;
+      await handleLocationSelect([lat, lng]);
+    });
+    
+    setMeasurementResult(null);
+  };
+  
+  // Enable marker placement mode
+  const enableMarkerPlacement = () => {
+    // Implementation will be added here
+    console.log('Marker placement mode enabled');
+  };
+  
+  // Enable circle drawing mode
+  const enableCircleDrawing = () => {
+    // Implementation will be added here
+    console.log('Circle drawing mode enabled');
   };
 
   return (
@@ -441,7 +602,7 @@ const MapView: React.FC<MapViewProps> = ({
                       size="icon" 
                       variant={activeMapTool === 'search' ? 'default' : 'ghost'}
                       className="h-8 w-8 p-1"
-                      onClick={() => activateMapTool('search')}
+                      onClick={() => setSearchModalOpen(true)}
                     >
                       <Search className="h-5 w-5" />
                     </Button>
@@ -644,8 +805,42 @@ const MapView: React.FC<MapViewProps> = ({
           )}
         </div>
         
-        <div id="map" className="flex-grow" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : 'calc(100vh - 164px)' }}>
-          {/* Map will be initialized here via Leaflet */}
+        <div className="relative flex-grow">
+          {/* Display measurement result or tool status */}
+          {(measurementResult || activeMapTool) && (
+            <div className="absolute top-3 left-1/2 transform -translate-x-1/2 bg-white shadow-md rounded-md px-3 py-2 z-10 text-sm flex items-center">
+              {measurementResult && (
+                <div className="flex items-center">
+                  <Ruler className="h-4 w-4 mr-2 text-blue-500" />
+                  <span>{measurementResult}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-6 w-6 p-0 ml-2"
+                    onClick={cleanupActiveTool}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              {!measurementResult && activeMapTool === 'marker' && (
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-2 text-red-500" />
+                  <span>Click on the map to place a marker</span>
+                </div>
+              )}
+              {!measurementResult && activeMapTool === 'circle' && (
+                <div className="flex items-center">
+                  <CircleDashed className="h-4 w-4 mr-2 text-green-500" />
+                  <span>Click on the map to place a circle center, then drag to set radius</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div id="map" className="w-full h-full" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : 'calc(100vh - 164px)' }}>
+            {/* Map will be initialized here via Leaflet */}
+          </div>
         </div>
         
         <div className="p-3 border-t border-gray-200 bg-white">
@@ -674,6 +869,55 @@ const MapView: React.FC<MapViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Search Location Modal */}
+      <Dialog open={searchModalOpen} onOpenChange={setSearchModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Search Location</DialogTitle>
+            <DialogDescription>
+              Enter a place name, address, or coordinates to find on the map.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="search-location">Location</Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="search-location" 
+                  placeholder="E.g., Kathmandu, Nepal or 27.70, 85.32" 
+                  className="flex-grow"
+                />
+                <Button 
+                  type="submit"
+                  onClick={() => {
+                    // Simple demo search - ideally this would use a geocoding service
+                    // For demonstration, we'll search for Kathmandu
+                    if (mapRef.current) {
+                      mapRef.current.setView([27.7172, 85.3240], 13);
+                      // Place a marker
+                      handleLocationSelect([27.7172, 85.3240]);
+                      setSearchModalOpen(false);
+                    }
+                  }}
+                >
+                  Search
+                </Button>
+              </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium mb-2">Search Tips:</h4>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-4">
+                <li>Enter a place name (e.g., "Pokhara")</li>
+                <li>Enter an address (e.g., "Durbar Marg, Kathmandu")</li>
+                <li>Enter coordinates (e.g., "27.70, 85.32")</li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
