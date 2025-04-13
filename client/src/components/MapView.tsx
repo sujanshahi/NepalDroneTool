@@ -48,7 +48,24 @@ const MapView: React.FC<MapViewProps> = ({
     aerodromes: false,
     nationalParks: false
   });
-  const [mapType, setMapType] = useState('satellite');
+  const [mapType, setMapType] = useState('default');
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  
+  // Map tile URLs for different map types
+  const mapTiles = {
+    default: {
+      url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+      attribution: 'Map data &copy; Google'
+    },
+    satellite: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    },
+    terrain: {
+      url: 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+      attribution: 'Map data &copy; Google'
+    }
+  };
   
   // Initialize map on component mount
   useEffect(() => {
@@ -59,16 +76,9 @@ const MapView: React.FC<MapViewProps> = ({
         zoom: DEFAULT_ZOOM
       });
       
-      // Add a better satellite imagery tile layer for drone operations
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-        maxZoom: 19
-      }).addTo(map);
-      
-      // Add a labels-only layer on top for context
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+      // Add default map tile layer
+      tileLayerRef.current = L.tileLayer(mapTiles.default.url, {
+        attribution: mapTiles.default.attribution,
         maxZoom: 19
       }).addTo(map);
       
@@ -262,8 +272,23 @@ const MapView: React.FC<MapViewProps> = ({
   // Handle map type change
   const handleMapTypeChange = (type: string) => {
     setMapType(type);
-    // If we were to implement this fully, we would change the map layer here
   };
+  
+  // Effect to update map type when it changes
+  useEffect(() => {
+    if (!mapRef.current || !tileLayerRef.current) return;
+    
+    // Remove current tile layer
+    tileLayerRef.current.remove();
+    
+    // Add new tile layer based on selected map type
+    const selectedTile = mapTiles[mapType as keyof typeof mapTiles] || mapTiles.default;
+    tileLayerRef.current = L.tileLayer(selectedTile.url, {
+      attribution: selectedTile.attribution,
+      maxZoom: 19
+    }).addTo(mapRef.current);
+    
+  }, [mapType]);
 
   // Handle center change from coordinates
   const handleCenterChange = (center: [number, number]) => {
