@@ -7,6 +7,7 @@ import HomePage from "@/pages/HomePage";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile-page";
 import AircraftPage from "@/pages/aircraft-page";
+import LandingPage from "@/pages/LandingPage";
 import { FlightPlanProvider } from "./context/FlightPlanContext";
 import { AuthProvider } from "./hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -14,7 +15,8 @@ import { ProtectedRoute } from "./lib/protected-route";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={HomePage} />
+      <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/map" component={HomePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/my-aircraft" component={AircraftPage} />
       <Route path="/auth" component={AuthPage} />

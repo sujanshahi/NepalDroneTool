@@ -40,14 +40,43 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       // Create map instance
       const map = L.map('map', {
         center: NEPAL_CENTER,
-        zoom: DEFAULT_ZOOM
+        zoom: DEFAULT_ZOOM,
+        zoomControl: false // We'll add custom zoom control
       });
       
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // Add multiple tile layers for basemaps and add layer controls
+      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
-      }).addTo(map);
+      });
+      
+      const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 19
+      });
+      
+      const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+        maxZoom: 17
+      });
+      
+      // Set default basemap
+      osmLayer.addTo(map);
+      
+      // Add basemap controls to top right
+      const baseMaps = {
+        "Street": osmLayer,
+        "Satellite": satelliteLayer,
+        "Topographic": topoLayer
+      };
+      
+      L.control.layers(baseMaps, null, {position: 'topright'}).addTo(map);
+      
+      // Add custom zoom control to top left
+      L.control.zoom({position: 'topleft'}).addTo(map);
+      
+      // Add scale control
+      L.control.scale({position: 'bottomleft', imperial: false}).addTo(map);
       
       // Initialize layers
       markersLayerRef.current = L.layerGroup().addTo(map);
@@ -80,6 +109,32 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
         // Add marker at clicked location
         await handleLocationSelect([lat, lng]);
       });
+      
+      // Add fullscreen control
+      map.addControl(new (L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function() {
+          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+          const button = L.DomUtil.create('a', 'leaflet-control-fullscreen', container);
+          button.innerHTML = '⤢';
+          button.href = '#';
+          button.title = 'Full Screen';
+          button.style.fontWeight = 'bold';
+          button.style.fontSize = '18px';
+          button.style.lineHeight = '24px';
+          button.style.textAlign = 'center';
+          button.style.width = '30px';
+          button.style.height = '30px';
+          
+          L.DomEvent.on(button, 'click', function(e) {
+            L.DomEvent.stopPropagation(e);
+            L.DomEvent.preventDefault(e);
+            toggleFullScreen();
+          });
+          
+          return container;
+        }
+      }))());
     }
     
     // Cleanup on unmount
