@@ -55,11 +55,13 @@ export default function EditFlightLogPage() {
   });
 
   const handleSubmit = (values: any) => {
-    // Format dates as ISO strings before sending to API
+    // Format dates as ISO strings and convert observers to array
     const formattedValues = {
       ...values,
       startTime: values.startTime.toISOString(),
       endTime: values.endTime.toISOString(),
+      // Convert comma-separated observers to array for JSONB field
+      observers: values.observers ? values.observers.split(',').map((o: string) => o.trim()).filter(Boolean) : []
     };
     updateMutation.mutate(formattedValues);
   };
@@ -98,7 +100,9 @@ export default function EditFlightLogPage() {
     ...flightLog,
     // Form expects Date objects for these fields
     startTime: new Date(flightLog.startTime),
-    endTime: new Date(flightLog.endTime)
+    endTime: new Date(flightLog.endTime),
+    // Convert observers from array (JSONB) to comma-separated string for the form
+    observers: Array.isArray(flightLog.observers) ? flightLog.observers.join(', ') : ''
   } : undefined;
 
   return (

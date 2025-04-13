@@ -297,7 +297,13 @@ function renderFlightLogList(
                     <Eye className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
                     <div>
                       <div className="font-medium">Observers</div>
-                      <div>{typeof log.observers === 'string' ? log.observers : JSON.stringify(log.observers)}</div>
+                      <div>
+                        {Array.isArray(log.observers) 
+                          ? log.observers.join(', ') 
+                          : (typeof log.observers === 'string' 
+                              ? log.observers 
+                              : '')}
+                      </div>
                     </div>
                   </div>
                 )}

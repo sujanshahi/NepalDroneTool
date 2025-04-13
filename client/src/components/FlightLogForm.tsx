@@ -42,9 +42,9 @@ const flightLogSchema = z.object({
   endTime: z.date({
     required_error: "Please select an end time",
   }),
-  duration: z.number().optional(),
-  weatherConditions: z.string().optional(),
-  notes: z.string().optional(),
+  duration: z.number().optional().nullable(),
+  weatherConditions: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
 }).refine(data => data.endTime > data.startTime, {
   message: "End time must be after start time",
   path: ["endTime"]
@@ -379,7 +379,14 @@ export function FlightLogForm({ initialValues, onSubmit, isLoading = false }: Fl
               <FormItem>
                 <FormLabel>Weather Conditions (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Clear skies, light wind" {...field} />
+                  <Input 
+                    placeholder="e.g., Clear skies, light wind" 
+                    value={field.value || ''} 
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    name={field.name}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -397,7 +404,11 @@ export function FlightLogForm({ initialValues, onSubmit, isLoading = false }: Fl
                   <Textarea 
                     placeholder="Add any observations, incidents, or other notes about the flight"
                     className="min-h-24"
-                    {...field} 
+                    value={field.value || ''} 
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    name={field.name}
                   />
                 </FormControl>
                 <FormMessage />

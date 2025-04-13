@@ -36,11 +36,13 @@ export default function NewFlightLogPage() {
   });
 
   const handleSubmit = (values: any) => {
-    // Format dates as ISO strings before sending to API
+    // Format dates as ISO strings and convert observers to array
     const formattedValues = {
       ...values,
       startTime: values.startTime.toISOString(),
       endTime: values.endTime.toISOString(),
+      // Convert comma-separated observers to array for JSONB field
+      observers: values.observers ? values.observers.split(',').map((o: string) => o.trim()).filter(Boolean) : []
     };
     createMutation.mutate(formattedValues);
   };
