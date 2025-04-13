@@ -10,11 +10,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
   
-  // Static test page - accessible without authentication
-  app.get('/test-static', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, 'static', 'index.html'));
-  });
-  
   // API routes for the drone flight planner
   
   // Error handling middleware
