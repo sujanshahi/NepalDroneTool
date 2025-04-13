@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Header from '@/components/Header';
-import SidePanel from '@/components/SidePanel';
 import MapView from '@/components/MapView';
 import InfoDrawer from '@/components/InfoDrawer';
 import MapSidebar from '@/components/MapSidebar';
