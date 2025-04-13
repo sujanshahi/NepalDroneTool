@@ -59,9 +59,16 @@ const MapView: React.FC<MapViewProps> = ({
         zoom: DEFAULT_ZOOM
       });
       
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      // Add a better satellite imagery tile layer for drone operations
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 19
+      }).addTo(map);
+      
+      // Add a labels-only layer on top for context
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
         maxZoom: 19
       }).addTo(map);
       
@@ -69,22 +76,8 @@ const MapView: React.FC<MapViewProps> = ({
       markersLayerRef.current = L.layerGroup().addTo(map);
       zonesLayerRef.current = L.layerGroup().addTo(map);
       
-      // Load Nepal outline
-      fetchNepalOutline()
-        .then(nepalFeature => {
-          nepalOutlineRef.current = L.geoJSON(nepalFeature, {
-            style: {
-              color: '#003893',
-              weight: 3,
-              fillOpacity: 0.1,
-              fillColor: '#DC143C',
-              opacity: 0.8,
-              dashArray: '5, 5',
-              className: 'nepal-border-glow'
-            }
-          }).addTo(map);
-        })
-        .catch(error => console.error('Error loading Nepal outline:', error));
+      // We're disabling the Nepal outline to improve interface clarity
+  // If needed, a more subtle outline can be re-enabled later
       
       // Store map reference
       mapRef.current = map;
@@ -125,25 +118,7 @@ const MapView: React.FC<MapViewProps> = ({
     };
   }, []);
 
-  // Add CSS for Nepal outline glow effect
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .nepal-border-glow {
-        filter: drop-shadow(0 0 6px #DC143C);
-        animation: glowing 2s infinite alternate;
-      }
-      @keyframes glowing {
-        from { filter: drop-shadow(0 0 2px #DC143C); }
-        to { filter: drop-shadow(0 0 8px #DC143C); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  // We removed the Nepal outline glow effect to improve performance
   
   // Update map size when fullscreen state changes
   useEffect(() => {
