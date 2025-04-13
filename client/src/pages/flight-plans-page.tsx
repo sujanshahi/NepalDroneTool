@@ -65,13 +65,13 @@ export default function FlightPlansPage() {
 
   return (
     <div className="mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b">
         <div>
-          <h1 className="text-3xl font-bold">Flight Plans</h1>
-          <p className="text-muted-foreground">Manage your drone flight plans</p>
+          <h1 className="text-2xl font-semibold">My Flight Plans</h1>
+          <p className="text-muted-foreground text-sm mt-1">Manage your drone flight plans</p>
         </div>
-        <Button onClick={() => setLocation("/flight-plans/new")}>
-          <Plus className="mr-2 h-4 w-4" /> New Flight Plan
+        <Button size="sm" className="bg-red-500 hover:bg-red-600" onClick={() => setLocation("/flight-plans/new")}>
+          <Plus className="mr-2 h-4 w-4" /> Add Flight Plan
         </Button>
       </div>
 
@@ -162,9 +162,9 @@ function renderFlightPlanList(
           <p className="text-sm text-muted-foreground max-w-sm mt-1">
             Create a new flight plan to visualize your drone missions and check for regulatory compliance.
           </p>
-          <Button className="mt-4" asChild>
+          <Button className="mt-4 bg-red-500 hover:bg-red-600" size="sm" asChild>
             <Link to="/flight-plans/new">
-              <Plus className="mr-2 h-4 w-4" /> Create Flight Plan
+              <Plus className="mr-2 h-4 w-4" /> Add Flight Plan
             </Link>
           </Button>
         </CardContent>

@@ -123,13 +123,13 @@ export default function FlightLogsPage() {
 
   return (
     <div className="mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b">
         <div>
-          <h1 className="text-3xl font-bold">Flight Logs</h1>
-          <p className="text-muted-foreground">Track your drone flight history</p>
+          <h1 className="text-2xl font-semibold">My Flight Logs</h1>
+          <p className="text-muted-foreground text-sm mt-1">Track your drone flight history</p>
         </div>
-        <Button onClick={() => setLocation("/flight-logs/new")}>
-          <Plus className="mr-2 h-4 w-4" /> New Flight Log
+        <Button size="sm" className="bg-red-500 hover:bg-red-600" onClick={() => setLocation("/flight-logs/new")}>
+          <Plus className="mr-2 h-4 w-4" /> Add Flight Log
         </Button>
       </div>
 
@@ -229,9 +229,9 @@ function renderFlightLogList(
           <p className="text-sm text-muted-foreground max-w-sm mt-1">
             Record your drone flights to keep track of your flight history and maintain compliance with regulations.
           </p>
-          <Button className="mt-4" asChild>
+          <Button className="mt-4 bg-red-500 hover:bg-red-600" size="sm" asChild>
             <Link to="/flight-logs/new">
-              <Plus className="mr-2 h-4 w-4" /> Create Flight Log
+              <Plus className="mr-2 h-4 w-4" /> Add Flight Log
             </Link>
           </Button>
         </CardContent>
