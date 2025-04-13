@@ -105,36 +105,32 @@ export const createZoneCircle = (
 
   // Create the tooltip content based on zone type
   let tooltipContent = '';
+  let typeText = '';
+  let typeColor = '';
   
+  // Get suitable class colors and text for each zone type
   if (zone.type === 'restricted') {
-    tooltipContent = `
-      <div class="tooltip-content">
-        <strong>${zone.name}</strong><br>
-        <span class="text-red-600 font-medium">Restricted Airspace</span>
-      </div>
-    `;
+    typeText = 'Restricted Airspace';
+    typeColor = 'text-red-600';
   } else if (zone.type === 'controlled') {
-    tooltipContent = `
-      <div class="tooltip-content">
-        <strong>${zone.name}</strong><br>
-        <span class="text-orange-600 font-medium">Controlled Airspace</span>
-      </div>
-    `;
+    typeText = 'Controlled Airspace';
+    typeColor = 'text-orange-600';
   } else if (zone.type === 'advisory') {
-    tooltipContent = `
-      <div class="tooltip-content">
-        <strong>${zone.name}</strong><br>
-        <span class="text-blue-600 font-medium">Advisory Area</span>
-      </div>
-    `;
+    typeText = 'Advisory Area';
+    typeColor = 'text-blue-600';
   } else {
-    tooltipContent = `
-      <div class="tooltip-content">
-        <strong>${zone.name}</strong><br>
-        <span class="text-green-600 font-medium">Open Airspace</span>
-      </div>
-    `;
+    typeText = 'Open Airspace';
+    typeColor = 'text-green-600';
   }
+  
+  // Create enhanced tooltip with more information
+  tooltipContent = `
+    <div class="tooltip-content">
+      <div class="font-bold text-sm">${zone.name}</div>
+      <div class="${typeColor} font-medium text-xs">${typeText}</div>
+      <div class="text-xs text-gray-600 mt-1">Click for details</div>
+    </div>
+  `;
   
   // Add tooltip for hover effect
   circle.bindTooltip(tooltipContent, {
@@ -166,10 +162,10 @@ export const createZoneCircle = (
     
     // Add popup to the main circle for click events
     circle.bindPopup(`
-      <div class="text-sm p-1">
-        <h3 class="font-bold text-gray-800 mb-1">${zone.name}</h3>
-        <p class="text-sm text-gray-600 mb-2">${zone.description}</p>
-        <p class="text-xs font-bold text-red-600 border-t pt-1">RESTRICTED AIRSPACE - NO DRONE ZONE</p>
+      <div class="text-sm">
+        <h3 class="font-bold text-gray-800">${zone.name}</h3>
+        <p class="text-gray-600">${zone.description}</p>
+        <p class="text-xs font-bold text-red-600 border-t">RESTRICTED AIRSPACE - NO DRONE ZONE</p>
       </div>
     `);
     
@@ -192,10 +188,10 @@ export const createZoneCircle = (
   }
   
   circle.bindPopup(`
-    <div class="text-sm p-1">
-      <h3 class="font-bold text-gray-800 mb-1">${zone.name}</h3>
-      <p class="text-sm text-gray-600 mb-2">${zone.description}</p>
-      <p class="text-xs font-bold ${statusClass} border-t pt-1">${statusText}</p>
+    <div class="text-sm">
+      <h3 class="font-bold text-gray-800">${zone.name}</h3>
+      <p class="text-gray-600">${zone.description}</p>
+      <p class="text-xs font-bold ${statusClass} border-t">${statusText}</p>
     </div>
   `);
   
