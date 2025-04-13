@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient, getQueryFn } from '@/lib/queryClient';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
-import { Aircraft } from '@shared/schema';
+import { insertAircraftSchema, Aircraft } from '@shared/schema';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,25 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Loader2, PlaneTakeoff, Plus, Pencil, Trash2 } from 'lucide-react';
+import { z } from 'zod';
+
+// Create a Zod schema for form validation
+const aircraftFormSchema = z.object({
+  id: z.number().optional(),
+  name: z.string().min(2, {message: "Name must be at least 2 characters"}),
+  manufacturer: z.string().optional(),
+  model: z.string().optional(),
+  serialNumber: z.string().optional(),
+  type: z.string().min(1, {message: "Aircraft type is required"}),
+  weight: z.preprocess(
+    (val) => (val === '' ? undefined : Number(val)),
+    z.number().nonnegative().optional().nullable()
+  ),
+  maxFlightTime: z.preprocess(
+    (val) => (val === '' ? undefined : Number(val)),
+    z.number().nonnegative().optional().nullable()
+  ),
+});
 
 // Aircraft types for Nepal
 const AIRCRAFT_TYPES = [
@@ -172,10 +191,31 @@ const AircraftPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (selectedAircraft) {
-      updateAircraftMutation.mutate(formData);
-    } else {
-      createAircraftMutation.mutate(formData);
+    // Validate form data with Zod schema
+    try {
+      const validatedData = aircraftFormSchema.parse(formData);
+      
+      if (selectedAircraft) {
+        updateAircraftMutation.mutate(validatedData);
+      } else {
+        createAircraftMutation.mutate(validatedData);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Format and display validation errors
+        const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+        toast({
+          title: 'Validation Error',
+          description: errorMessages,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'An unexpected error occurred',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
