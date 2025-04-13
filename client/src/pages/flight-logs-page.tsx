@@ -13,7 +13,7 @@ import {
   Calendar, 
   Clock, 
   CloudSun, 
-  Drone, 
+  PlaneTakeoff, 
   Eye, 
   FileText, 
   MapPin, 
@@ -256,7 +256,7 @@ function renderFlightLogList(
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="flex items-center">
-                  <Drone className="mr-2 h-5 w-5" />
+                  <PlaneTakeoff className="mr-2 h-5 w-5" />
                   {getAircraftName(log.aircraftId)}
                 </CardTitle>
                 <CardDescription className="mt-1">
@@ -292,12 +292,12 @@ function renderFlightLogList(
                   </div>
                 </div>
                 
-                {log.observers && log.observers.length > 0 && (
+                {log.observers && (
                   <div className="flex items-start">
                     <Eye className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
                     <div>
                       <div className="font-medium">Observers</div>
-                      <div>{Array.isArray(log.observers) ? log.observers.join(", ") : log.observers}</div>
+                      <div>{typeof log.observers === 'string' ? log.observers : JSON.stringify(log.observers)}</div>
                     </div>
                   </div>
                 )}

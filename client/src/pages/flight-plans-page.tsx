@@ -63,19 +63,6 @@ export default function FlightPlansPage() {
     }
   };
 
-  // Status badge styling
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
-      "draft": { variant: "secondary", label: "Draft" },
-      "planned": { variant: "default", label: "Planned" },
-      "completed": { variant: "outline", label: "Completed" },
-      "cancelled": { variant: "destructive", label: "Cancelled" }
-    };
-
-    const config = statusMap[status] || { variant: "secondary", label: status };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
   return (
     <div className="container py-8 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
@@ -137,6 +124,18 @@ function renderFlightPlanList(
   error: Error | null,
   handleDelete: (id: number) => void
 ) {
+  // Status badge styling
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
+      "draft": { variant: "secondary", label: "Draft" },
+      "planned": { variant: "default", label: "Planned" },
+      "completed": { variant: "outline", label: "Completed" },
+      "cancelled": { variant: "destructive", label: "Cancelled" }
+    };
+
+    const config = statusMap[status] || { variant: "secondary", label: status };
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-40">
@@ -189,13 +188,13 @@ function renderFlightPlanList(
           </CardHeader>
           <CardContent className="flex-grow">
             <div className="space-y-2 text-sm">
-              {plan.location?.address && (
+              {plan.location && typeof plan.location === 'object' && 'address' in plan.location && plan.location.address && (
                 <div className="flex items-start">
                   <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
                   <span>{plan.location.address}</span>
                 </div>
               )}
-              {plan.flight?.altitude && (
+              {plan.flight && typeof plan.flight === 'object' && 'altitude' in plan.flight && plan.flight.altitude && (
                 <div>
                   <span className="text-muted-foreground">Altitude:</span> {plan.flight.altitude}m
                 </div>

@@ -13,7 +13,18 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Loader2, LogOut, User as UserIcon, PlaneTakeoff, Home, Map, FileText, Info } from 'lucide-react';
+import { 
+  Loader2, 
+  LogOut, 
+  User as UserIcon, 
+  PlaneTakeoff, 
+  Home, 
+  Map, 
+  FileText, 
+  Info, 
+  ClipboardList, 
+  BarChart
+} from 'lucide-react';
 
 const Header: React.FC = () => {
   const { user, logoutMutation } = useAuth();
@@ -127,6 +138,14 @@ const Header: React.FC = () => {
                 <DropdownMenuItem onClick={() => navigate('/my-aircraft')}>
                   <PlaneTakeoff className="mr-2 h-4 w-4" />
                   <span>My Aircraft</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/flight-plans')}>
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  <span>Flight Plans</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/flight-logs')}>
+                  <BarChart className="mr-2 h-4 w-4" />
+                  <span>Flight Logs</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
