@@ -17,7 +17,10 @@ import {
   Radio,
   Building, 
   FileText,
-  ExternalLink
+  ExternalLink,
+  Phone,
+  Mail,
+  ChevronRight
 } from 'lucide-react';
 
 const RegulationsPage: React.FC = () => {
