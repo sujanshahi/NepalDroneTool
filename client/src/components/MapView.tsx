@@ -12,6 +12,7 @@ import { AirspaceZone, MapControls } from '@/lib/types';
 import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
 import { Layers, HelpCircle, Focus, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import MapSidebar from '@/components/MapSidebar';
 
 const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = ({ onOpenInfoDrawer }) => {
   const mapRef = useRef<L.Map | null>(null);
@@ -33,6 +34,13 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   });
   
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState<[number, number] | null>(null);
+  const [activeLayers, setActiveLayers] = useState({
+    airspace: true,
+    aerodromes: false,
+    nationalParks: false
+  });
+  const [mapType, setMapType] = useState('satellite');
   
   // Initialize map on component mount
   useEffect(() => {
