@@ -67,9 +67,14 @@ export default function AuthPage() {
 
   // Handle login form submission
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
+    console.log('Login attempt with username:', values.username);
     loginMutation.mutate(values, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('Login successful, user data:', data);
         navigate("/");
+      },
+      onError: (error) => {
+        console.error('Login error:', error);
       }
     });
   };
@@ -79,9 +84,14 @@ export default function AuthPage() {
     // Remove confirmPassword as it's not in our API schema
     const { confirmPassword, ...userData } = values;
     
+    console.log('Registration attempt with data:', { ...userData, password: '****' });
     registerMutation.mutate(userData, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('Registration successful, user data:', data);
         navigate("/");
+      },
+      onError: (error) => {
+        console.error('Registration error:', error);
       }
     });
   };
