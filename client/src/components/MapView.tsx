@@ -442,25 +442,29 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       if (newTrackingState) {
         // Start tracking
         if (navigator.geolocation) {
-          // Create pulsing animation style if not already there
+          // Add styling for user location marker - no animation for stability
           if (!locationStyleRef.current) {
             const style = document.createElement('style');
             style.innerHTML = `
               .user-location-marker {
-                animation: pulse-blue 2s infinite;
+                /* Removed animation for stability */
+                filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
               }
-              @keyframes pulse-blue {
+              .user-location-marker-ring {
+                animation: pulse-ring 2s infinite;
+              }
+              @keyframes pulse-ring {
                 0% {
-                  transform: scale(0.8);
-                  opacity: 0.7;
+                  transform: scale(0.95);
+                  opacity: 0.5;
                 }
                 50% {
-                  transform: scale(1.2);
-                  opacity: 0.9;
+                  transform: scale(1.05);
+                  opacity: 0.8;
                 }
                 100% {
-                  transform: scale(0.8);
-                  opacity: 0.7;
+                  transform: scale(0.95);
+                  opacity: 0.5;
                 }
               }
             `;
@@ -489,14 +493,14 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
               if (userLocationMarkerRef.current) {
                 userLocationMarkerRef.current.setLatLng(userLatLng);
               } else {
-                // Create pulsing blue dot marker
+                // Create stable blue dot marker (no animation)
                 const userMarker = L.circleMarker(userLatLng, {
-                  radius: 8,
-                  color: '#1E90FF',
-                  fillColor: '#1E90FF',
-                  fillOpacity: 0.7,
-                  weight: 2,
-                  opacity: 0.9,
+                  radius: 6,                  // Smaller radius for stability
+                  color: '#ffffff',          // White border
+                  fillColor: '#0066ff',      // Bright blue fill
+                  fillOpacity: 1,            // Solid fill for stability
+                  weight: 2,                 // Thicker border
+                  opacity: 1,                // Fully opaque
                   className: 'user-location-marker'
                 }).addTo(mapRef.current);
                 
@@ -511,14 +515,15 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
                 accuracyCircleRef.current.setLatLng(userLatLng);
                 accuracyCircleRef.current.setRadius(accuracy);
               } else {
-                // Create new accuracy circle
+                // Create new accuracy circle with very subtle appearance
                 accuracyCircleRef.current = L.circle(userLatLng, {
                   radius: accuracy,
-                  color: '#4B9FFF',
-                  fillColor: '#4B9FFF',
-                  fillOpacity: 0.08, // Reduced opacity 
-                  weight: 1,
-                  opacity: 0.3,      // More subtle border
+                  color: '#4B9FFF',           
+                  fillColor: '#4B9FFF',       
+                  fillOpacity: 0.05,         // Very low opacity for fill
+                  weight: 0.5,               // Thinner border
+                  opacity: 0.2,              // Nearly transparent border
+                  dashArray: '3, 5',         // Dashed line for less visual noise
                   interactive: false
                 }).addTo(mapRef.current);
               }
