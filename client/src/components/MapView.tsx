@@ -22,8 +22,24 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   const zonesLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
   const nepalOutlineRef = useRef<L.GeoJSON | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const selectedMarkerRef = useRef<L.Marker | null>(null);
   
   const { flightPlan, updateLocation } = useFlightPlan();
+  
+  // Function to handle location selection (will be called from map click or search)
+  const onLocationSelect = (
+    coordinates: [number, number], 
+    address: string, 
+    district: string, 
+    airspaceType: string
+  ) => {
+    updateLocation({
+      coordinates,
+      address,
+      district,
+      airspaceType
+    });
+  };
   
   const [mapControls, setMapControls] = useState<MapControls>({
     layers: {
@@ -391,10 +407,8 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
                   className: 'user-location-marker'
                 }).addTo(mapRef.current);
                 
-                // Move the marker to the top
-                if (userMarker.getElement()) {
-                  userMarker.getElement()?.style.setProperty('z-index', '1000');
-                }
+                // Move the marker to the top using CSS class
+                userMarker.getElement()?.classList.add('high-z-index-marker');
                 
                 userLocationMarkerRef.current = userMarker;
               }
