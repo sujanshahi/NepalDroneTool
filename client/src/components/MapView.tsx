@@ -10,8 +10,16 @@ import {
 import { airspaceZones } from '@/data/airspaceData';
 import { AirspaceZone, MapControls } from '@/lib/types';
 import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
-import { Layers, HelpCircle, Focus, Maximize, Minimize } from 'lucide-react';
+import { 
+  Layers, HelpCircle, Focus, Maximize, Minimize, Search, 
+  Crosshair, Ruler, CircleDashed, MapPin, FileText, 
+  ImageIcon, Share2, LocateFixed, Home, Download, Printer, X
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 //import MapSidebar from '@/components/MapSidebar';
 
 interface MapViewProps {
@@ -317,9 +325,25 @@ const MapView: React.FC<MapViewProps> = ({
     }
   };
   
+  // Define new states for map tools
+  const [activeMapTool, setActiveMapTool] = useState<string | null>(null);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [drawingEnabled, setDrawingEnabled] = useState(false);
+  const [measurementMode, setMeasurementMode] = useState(false);
+
+  // Function to activate a map tool
+  const activateMapTool = (toolName: string) => {
+    if (activeMapTool === toolName) {
+      // If tool is already active, deactivate it
+      setActiveMapTool(null);
+    } else {
+      // Activate the new tool and deactivate any other active tool
+      setActiveMapTool(toolName);
+    }
+  };
+
   return (
     <div className={`h-full ${isFullScreen ? 'fixed inset-0 z-50' : ''}`}>
-
       <div 
         ref={mapContainerRef}
         className={`map-container bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 h-full ${
@@ -329,33 +353,221 @@ const MapView: React.FC<MapViewProps> = ({
         }`}
       >
         <div className="p-3 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="font-heading font-semibold text-gray-700">Interactive Map</h2>
+          <div className="flex items-center space-x-4">
+            <h2 className="font-heading font-semibold text-gray-700">Drone Flight Planner</h2>
+            <div className="flex">
+              <Button
+                variant="outline"
+                size="sm"
+                className={`rounded-l-md ${mapType === 'default' ? 'bg-gray-200' : ''}`}
+                onClick={() => handleMapTypeChange('default')}
+              >
+                Map
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`rounded-none border-l-0 ${mapType === 'satellite' ? 'bg-gray-200' : ''}`}
+                onClick={() => handleMapTypeChange('satellite')}
+              >
+                Satellite
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`rounded-r-md border-l-0 ${mapType === 'terrain' ? 'bg-gray-200' : ''}`}
+                onClick={() => handleMapTypeChange('terrain')}
+              >
+                Terrain
+              </Button>
+            </div>
+          </div>
           <div className="flex space-x-2">
             <Button
               size="icon"
               variant="outline"
-              className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-              title="Center Map on Nepal"
+              className="p-2 rounded-md hover:bg-gray-200 flex items-center"
               onClick={centerOnNepal}
             >
-              <Focus className="h-5 w-5 text-gray-700" />
+              <Home className="h-4 w-4 text-gray-700" />
             </Button>
-            
-            <div className="relative">
-              <Button
-                size="icon"
-                variant="outline"
-                className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-                title="Toggle Layers"
-                onClick={() => setMapControls(prev => ({ ...prev, isDrawerOpen: !prev.isDrawerOpen }))}
-              >
-                <Layers className="h-5 w-5 text-gray-700" />
-              </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              className="p-2 rounded-md hover:bg-gray-200 flex items-center"
+              onClick={handleUseMyLocation}
+            >
+              <LocateFixed className="h-4 w-4 text-gray-700" />
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              className="p-2 rounded-md hover:bg-gray-200 flex items-center"
+              onClick={toggleFullScreen}
+            >
+              {isFullScreen ? (
+                <Minimize className="h-4 w-4 text-gray-700" />
+              ) : (
+                <Maximize className="h-4 w-4 text-gray-700" />
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Map Tools Panel - Vertical on left side like in reference image */}
+        <div className="flex h-full relative">
+          <div className="absolute left-3 top-3 bg-white rounded-md shadow-md z-10">
+            <TooltipProvider>
+              <div className="flex flex-col gap-1 p-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={activeMapTool === 'layers' ? 'default' : 'ghost'}
+                      className="h-8 w-8 p-1"
+                      onClick={() => setMapControls(prev => ({ ...prev, isDrawerOpen: !prev.isDrawerOpen }))}
+                    >
+                      <Layers className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Toggle Map Layers</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={activeMapTool === 'search' ? 'default' : 'ghost'}
+                      className="h-8 w-8 p-1"
+                      onClick={() => activateMapTool('search')}
+                    >
+                      <Search className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Search Location</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={activeMapTool === 'marker' ? 'default' : 'ghost'}
+                      className="h-8 w-8 p-1"
+                      onClick={() => activateMapTool('marker')}
+                    >
+                      <MapPin className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Place Marker</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={activeMapTool === 'measure' ? 'default' : 'ghost'}
+                      className="h-8 w-8 p-1"
+                      onClick={() => activateMapTool('measure')}
+                    >
+                      <Ruler className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Measure Distance</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={activeMapTool === 'circle' ? 'default' : 'ghost'}
+                      className="h-8 w-8 p-1"
+                      onClick={() => activateMapTool('circle')}
+                    >
+                      <CircleDashed className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Draw Circle</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={activeMapTool === 'export' ? 'default' : 'ghost'}
+                      className="h-8 w-8 p-1"
+                      onClick={() => activateMapTool('export')}
+                    >
+                      <Download className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Export Map</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={activeMapTool === 'print' ? 'default' : 'ghost'}
+                      className="h-8 w-8 p-1"
+                      onClick={() => activateMapTool('print')}
+                    >
+                      <Printer className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Print Map</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant="ghost"
+                      className="h-8 w-8 p-1"
+                      onClick={showHelp}
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Help</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          </div>
+
+          {/* Layer control panel */}
+          {mapControls.isDrawerOpen && (
+            <div className="absolute left-16 top-3 bg-white shadow-md rounded-md p-3 z-10 w-64 border border-gray-200">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium text-sm">Map Layers</h3>
+                <Button 
+                  size="icon" 
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setMapControls(prev => ({ ...prev, isDrawerOpen: false }))}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
               
-              {mapControls.isDrawerOpen && (
-                <div className="absolute right-0 top-10 bg-white shadow-md rounded-md p-3 z-10 w-48">
-                  <h3 className="font-medium text-sm mb-2">Toggle Layers</h3>
-                  
+              <div className="space-y-3">
+                <div className="border-b pb-2">
+                  <h4 className="text-xs font-medium text-gray-500 mb-2">AIRSPACE ZONES</h4>
                   <div className="space-y-2">
                     <label className="flex items-center text-sm cursor-pointer">
                       <input
@@ -364,7 +576,7 @@ const MapView: React.FC<MapViewProps> = ({
                         onChange={() => toggleLayer('restricted')}
                         className="mr-2"
                       />
-                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}` }}></div>
+                      <div className="w-4 h-4 mr-2 rounded-sm bg-[#e74c3c]"></div>
                       {MAP_LAYERS.RESTRICTED}
                     </label>
                     
@@ -375,7 +587,7 @@ const MapView: React.FC<MapViewProps> = ({
                         onChange={() => toggleLayer('controlled')}
                         className="mr-2"
                       />
-                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}` }}></div>
+                      <div className="w-4 h-4 mr-2 rounded-sm bg-[#e67e22]"></div>
                       {MAP_LAYERS.CONTROLLED}
                     </label>
                     
@@ -386,7 +598,7 @@ const MapView: React.FC<MapViewProps> = ({
                         onChange={() => toggleLayer('advisory')}
                         className="mr-2"
                       />
-                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}` }}></div>
+                      <div className="w-4 h-4 mr-2 rounded-sm bg-[#3498db]"></div>
                       {MAP_LAYERS.ADVISORY}
                     </label>
                     
@@ -397,38 +609,39 @@ const MapView: React.FC<MapViewProps> = ({
                         onChange={() => toggleLayer('open')}
                         className="mr-2"
                       />
-                      <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}` }}></div>
+                      <div className="w-4 h-4 mr-2 rounded-sm bg-[#2ecc71]"></div>
                       {MAP_LAYERS.OPEN}
                     </label>
                   </div>
                 </div>
-              )}
+
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 mb-2">OTHER FEATURES</h4>
+                  <div className="space-y-2">
+                    <label className="flex items-center text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={activeLayers.aerodromes}
+                        onChange={(e) => handleLayerToggle('aerodromes', e.target.checked)}
+                        className="mr-2"
+                      />
+                      Aerodromes
+                    </label>
+                    
+                    <label className="flex items-center text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={activeLayers.nationalParks}
+                        onChange={(e) => handleLayerToggle('nationalParks', e.target.checked)}
+                        className="mr-2"
+                      />
+                      National Parks
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <Button
-              size="icon"
-              variant="outline"
-              className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-              title="Help"
-              onClick={showHelp}
-            >
-              <HelpCircle className="h-5 w-5 text-gray-700" />
-            </Button>
-            
-            <Button
-              size="icon"
-              variant="outline"
-              className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center"
-              title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
-              onClick={toggleFullScreen}
-            >
-              {isFullScreen ? (
-                <Minimize className="h-5 w-5 text-gray-700" />
-              ) : (
-                <Maximize className="h-5 w-5 text-gray-700" />
-              )}
-            </Button>
-          </div>
+          )}
         </div>
         
         <div id="map" className="flex-grow" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : 'calc(100vh - 164px)' }}>
