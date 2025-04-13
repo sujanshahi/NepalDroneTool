@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient, getQueryFn } from '@/lib/queryClient';
 import Header from '@/components/Header';
@@ -77,6 +78,7 @@ interface AircraftFormData {
 const AircraftPage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [_, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAircraft, setSelectedAircraft] = useState<Aircraft | null>(null);
   const [formData, setFormData] = useState<AircraftFormData>({
@@ -283,6 +285,18 @@ const AircraftPage: React.FC = () => {
                   <p className="text-red-500 mb-2">Failed to load aircraft data</p>
                   <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/aircraft'] })}>
                     Try Again
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : !user ? (
+            <Card className="my-4">
+              <CardContent className="py-12 flex flex-col items-center justify-center">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-2">Authentication Required</h3>
+                  <p className="text-gray-500 mb-6">Please log in to manage your aircraft.</p>
+                  <Button onClick={() => navigate('/auth')}>
+                    Login / Register
                   </Button>
                 </div>
               </CardContent>
