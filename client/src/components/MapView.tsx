@@ -12,9 +12,17 @@ import { AirspaceZone, MapControls } from '@/lib/types';
 import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
 import { Layers, HelpCircle, Focus, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import MapSidebar from '@/components/MapSidebar';
+//import MapSidebar from '@/components/MapSidebar';
 
-const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = ({ onOpenInfoDrawer }) => {
+interface MapViewProps {
+  onOpenInfoDrawer: (zone?: AirspaceZone) => void;
+  onCursorPositionChange?: (position: [number, number] | null) => void;
+}
+
+const MapView: React.FC<MapViewProps> = ({ 
+  onOpenInfoDrawer,
+  onCursorPositionChange
+}) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
   const zonesLayerRef = useRef<L.LayerGroup>(new L.LayerGroup());
@@ -92,12 +100,19 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       // Track cursor position on mouse move
       map.on('mousemove', (e) => {
         const { lat, lng } = e.latlng;
-        setCursorPosition([lat, lng]);
+        const position: [number, number] = [lat, lng];
+        setCursorPosition(position);
+        if (onCursorPositionChange) {
+          onCursorPositionChange(position);
+        }
       });
       
       // Clear cursor position when mouse leaves the map
       map.on('mouseout', () => {
         setCursorPosition(null);
+        if (onCursorPositionChange) {
+          onCursorPositionChange(null);
+        }
       });
     }
     
@@ -303,17 +318,7 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   };
   
   return (
-    <div className={`flex ${isFullScreen ? 'fixed inset-0 z-50' : 'min-h-[600px]'}`}>
-      {/* Map Sidebar */}
-      <MapSidebar 
-        cursorPosition={cursorPosition}
-        onCenterChange={handleCenterChange}
-        onLayerToggle={handleLayerToggle}
-        onUseMyLocation={handleUseMyLocation}
-        onMapTypeChange={handleMapTypeChange}
-        activeLayers={activeLayers}
-        mapType={mapType}
-      />
+    <div className={`${isFullScreen ? 'fixed inset-0 z-50' : 'min-h-[600px]'}`}>
 
       <div 
         ref={mapContainerRef}
