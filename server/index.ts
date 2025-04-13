@@ -4,6 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { createServer } from "http";
+// Import proxy server module
+import "./proxy";
 
 // Load environment variables
 dotenv.config();
@@ -63,29 +65,16 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Serve the app on port 5000 (required for Replit workflow)
-  // and also on port 3000 (as requested)
-  const port5000 = 5000;
-  const port3000 = 3000;
+  // Serve the app on port 3000 as requested by user
+  // This will be our primary port
+  const port = 3000;
   
-  // Listen on port 5000 for Replit workflow
   server.listen({
-    port: port5000,
+    port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port5000}`);
-    console.log(`Server running on port ${port5000}`);
-    
-    // Also listen on port 3000
-    const serverCopy = createServer(app);
-    serverCopy.listen({
-      port: port3000,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`also serving on port ${port3000}`);
-      console.log(`Server also running on port ${port3000}`);
-    });
+    log(`serving on port ${port}`);
+    console.log(`Server running on port ${port}`);
   });
 })();
