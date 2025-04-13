@@ -330,14 +330,46 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
     setIsFullScreen(!isFullScreen);
   };
   
+  // Add CSS to fix z-index issues
+  useEffect(() => {
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = `
+      /* Fix z-index ordering for map components */
+      .leaflet-map-pane {
+        z-index: 2 !important;
+      }
+      .leaflet-overlay-pane {
+        z-index: 4 !important; 
+      }
+      .leaflet-marker-pane {
+        z-index: 5 !important;
+      }
+      .leaflet-popup-pane {
+        z-index: 7 !important;
+      }
+      .leaflet-tooltip-pane {
+        z-index: 7 !important;
+      }
+      .leaflet-control {
+        z-index: 8 !important;
+      }
+    `;
+    document.head.appendChild(styleEl);
+    
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
+
   return (
     <div 
       ref={mapContainerRef}
       className={`map-container bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ${
         isFullScreen 
-          ? 'fixed inset-0 z-50 rounded-none' 
+          ? 'fixed inset-0 z-40 rounded-none' 
           : 'w-full md:w-3/5 lg:w-2/3'
       }`}
+      style={{ position: 'relative', zIndex: 1 }}
     >
       <div className="p-3 border-b border-gray-200 flex justify-between items-center">
         <h2 className="font-heading font-semibold text-gray-700">Interactive Map</h2>

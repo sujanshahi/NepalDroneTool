@@ -92,15 +92,40 @@ export const createZoneCircle = (
     else if (zone.type === 'open') radius = 6000;
   }
   
-  // Create the circle with correct params
-  const circle = L.circle(center, {
-    ...ZONE_STYLES[zone.type],
-    radius: radius,
+  // Add CSS to ensure proper z-index for airspace zones
+  const styleEl = document.createElement('style');
+  styleEl.innerHTML = `
+    .leaflet-overlay-pane svg {
+      z-index: 400 !important;
+    }
+    .custom-tooltip {
+      z-index: 1000 !important;
+      pointer-events: none;
+    }
+    .pulse-circle {
+      animation: pulse 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.2; }
+      100% { opacity: 0.5; }
+    }
+  `;
+  document.head.appendChild(styleEl);
+  
+  // Get base style for zone type
+  const baseStyle = ZONE_STYLES[zone.type];
+  
+  // Create the circle with correct params - separate radius from options to fix TypeScript error
+  const circle = L.circle(center, radius, {
+    color: baseStyle.color,
+    fillColor: baseStyle.fillColor,
     stroke: true,
     weight: 1.5,
     opacity: 0.7,
     fillOpacity: 0.25,
-    interactive: true
+    interactive: true,
+    bubblingMouseEvents: false,
+    className: `airspace-zone airspace-zone-${zone.type}`
   });
 
   // Create the tooltip content based on zone type
@@ -142,15 +167,14 @@ export const createZoneCircle = (
   
   // Add pulse effect for restricted zones
   if (zone.type === 'restricted') {
-    const pulseOptions = {
+    // Create pulse circle effect
+    const pulseCircle = L.circle(center, radius + 50, {
       ...ZONE_STYLES[zone.type],
-      radius: radius + 50,
       fillOpacity: 0,
       weight: 3,
       opacity: 0.3,
-      className: 'pulse-circle'
-    };
-    const pulseCircle = L.circle(center, pulseOptions);
+      className: 'pulse-circle airspace-zone-pulse'
+    });
     
     // Add click handler to pulse circle as well
     pulseCircle.on('click', () => {
