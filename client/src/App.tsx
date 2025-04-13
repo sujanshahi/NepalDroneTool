@@ -1,31 +1,19 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import NotFound from "@/pages/not-found";
-import HomePage from "@/pages/HomePage";
-import { FlightPlanProvider } from "./context/FlightPlanContext";
-import TestPage from "./TestPage";
+import React from 'react';
 
-// Simplified routing - no authentication needed
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={TestPage} />
-      <Route path="/map" component={HomePage} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
+// Ultra-simple app to make sure the preview works
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <FlightPlanProvider>
-        <Router />
-        <Toaster />
-      </FlightPlanProvider>
-    </QueryClientProvider>
+    <div className="flex items-center justify-center h-screen">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-blue-600 mb-4">Basic Test</h1>
+        <p className="text-lg">If you can see this, the app is working correctly.</p>
+        <div className="mt-4">
+          <a href="/map" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Go to Map (may crash)
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
 
