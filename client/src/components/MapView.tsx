@@ -10,7 +10,7 @@ import {
 import { airspaceZones } from '@/data/airspaceData';
 import { AirspaceZone, MapControls } from '@/lib/types';
 import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
-import { Layers, HelpCircle, Focus, Maximize, Minimize } from 'lucide-react';
+import { Layers, HelpCircle, Focus, Maximize, Minimize, Navigation, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Import CSS for Leaflet
@@ -36,6 +36,9 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   });
   
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [userLocation, setUserLocation] = useState<L.LatLng | null>(null);
+  const [isTrackingLocation, setIsTrackingLocation] = useState(false);
+  const userLocationMarkerRef = useRef<L.CircleMarker | null>(null);
   
   // Initialize map on component mount
   // Get the basemap parameter from URL
@@ -320,6 +323,154 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
     }
   };
   
+  // Track user's location with blue dot
+  const trackUserLocation = () => {
+    if (!mapRef.current) return;
+    
+    setIsTrackingLocation(prevState => {
+      const newTrackingState = !prevState;
+      
+      if (newTrackingState) {
+        // Start tracking
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            // Success callback
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              const userLatLng = L.latLng(latitude, longitude);
+              setUserLocation(userLatLng);
+              
+              // Center map on user's location
+              mapRef.current?.setView(userLatLng, 14);
+              
+              // Create or update blue dot marker
+              if (userLocationMarkerRef.current) {
+                userLocationMarkerRef.current.setLatLng(userLatLng);
+              } else {
+                // Create pulsing blue dot
+                const userMarker = L.circleMarker(userLatLng, {
+                  radius: 8,
+                  color: '#1E90FF',
+                  fillColor: '#1E90FF',
+                  fillOpacity: 0.7,
+                  weight: 2,
+                  opacity: 0.9,
+                  className: 'user-location-marker'
+                });
+                
+                // Ensure map reference is valid before adding
+                if (mapRef.current) {
+                  userMarker.addTo(mapRef.current);
+                }
+                
+                userLocationMarkerRef.current = userMarker;
+                
+                // Add accuracy circle
+                let accuracyCircle: L.Circle;
+                
+                if (mapRef.current) {
+                  accuracyCircle = L.circle(userLatLng, {
+                    radius: position.coords.accuracy,
+                    color: '#4B9FFF',
+                    fillColor: '#4B9FFF',
+                    fillOpacity: 0.1,
+                    weight: 1,
+                    opacity: 0.4,
+                    interactive: false
+                  }).addTo(mapRef.current);
+                } else {
+                  // Create circle not attached to a map yet
+                  accuracyCircle = L.circle(userLatLng, {
+                    radius: position.coords.accuracy,
+                    color: '#4B9FFF',
+                    fillColor: '#4B9FFF',
+                    fillOpacity: 0.1,
+                    weight: 1,
+                    opacity: 0.4,
+                    interactive: false
+                  });
+                }
+                
+                // Create pulsing animation
+                const style = document.createElement('style');
+                style.innerHTML = `
+                  .user-location-marker {
+                    animation: pulse-blue 2s infinite;
+                  }
+                  @keyframes pulse-blue {
+                    0% {
+                      transform: scale(0.8);
+                      opacity: 0.7;
+                    }
+                    50% {
+                      transform: scale(1.2);
+                      opacity: 0.9;
+                    }
+                    100% {
+                      transform: scale(0.8);
+                      opacity: 0.7;
+                    }
+                  }
+                `;
+                document.head.appendChild(style);
+                
+                // Start continuous watching
+                const watchId = navigator.geolocation.watchPosition(
+                  (updatedPosition) => {
+                    const { latitude, longitude, accuracy } = updatedPosition.coords;
+                    const updatedLatLng = L.latLng(latitude, longitude);
+                    
+                    // Update marker positions
+                    userLocationMarkerRef.current?.setLatLng(updatedLatLng);
+                    accuracyCircle.setLatLng(updatedLatLng);
+                    accuracyCircle.setRadius(accuracy);
+                    
+                    setUserLocation(updatedLatLng);
+                  },
+                  (error) => {
+                    console.error("Error watching user position:", error.message);
+                    setIsTrackingLocation(false);
+                  },
+                  { enableHighAccuracy: true }
+                );
+                
+                // Store watch ID for cleanup
+                return () => {
+                  navigator.geolocation.clearWatch(watchId);
+                  if (mapRef.current) {
+                    mapRef.current.removeLayer(userMarker);
+                    mapRef.current.removeLayer(accuracyCircle);
+                  }
+                  document.head.removeChild(style);
+                  userLocationMarkerRef.current = null;
+                };
+              }
+            },
+            // Error callback
+            (error) => {
+              console.error("Error getting user location:", error.message);
+              setIsTrackingLocation(false);
+              alert("Unable to access your location. Please check your device permissions.");
+            },
+            // Options
+            { enableHighAccuracy: true }
+          );
+        } else {
+          alert("Geolocation is not supported by your browser");
+          setIsTrackingLocation(false);
+        }
+      } else {
+        // Stop tracking
+        if (userLocationMarkerRef.current && mapRef.current) {
+          mapRef.current.removeLayer(userLocationMarkerRef.current);
+          userLocationMarkerRef.current = null;
+        }
+      }
+      
+      return newTrackingState;
+    });
+  };
+  
   // Show help/info drawer
   const showHelp = () => {
     onOpenInfoDrawer();
@@ -488,6 +639,16 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
               </div>
             )}
           </div>
+          
+          <Button
+            size="icon"
+            variant="outline"
+            className={`p-2 ${isTrackingLocation ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} rounded-md hover:bg-gray-200 flex items-center`}
+            title="Show My Location"
+            onClick={trackUserLocation}
+          >
+            <Navigation className="h-5 w-5" />
+          </Button>
           
           <Button
             size="icon"

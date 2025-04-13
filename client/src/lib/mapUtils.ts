@@ -115,8 +115,9 @@ export const createZoneCircle = (
   // Get base style for zone type
   const baseStyle = ZONE_STYLES[zone.type];
   
-  // Create the circle with correct params - separate radius from options to fix TypeScript error
-  const circle = L.circle(center, radius, {
+  // Create the circle with correct params - use appropriate options object for L.circle
+  const circle = L.circle(center, {
+    radius: radius,  // Set radius in the options object
     color: baseStyle.color,
     fillColor: baseStyle.fillColor,
     stroke: true,
