@@ -192,20 +192,26 @@ function renderFlightPlanList(
                 <div className="flex items-start">
                   <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-0.5" />
                   <span>
-                    {plan.location && typeof plan.location === 'object' && plan.location !== null
-                      ? (plan.location.address 
-                         ? String(plan.location.address)
-                         : 'Location coordinates set')
-                      : 'Location set'}
+                    {(() => {
+                      if (plan.location && typeof plan.location === 'object' && plan.location !== null) {
+                        const loc = plan.location as any;
+                        return loc.address ? String(loc.address) : 'Location coordinates set';
+                      }
+                      return 'Location set';
+                    })()}
                   </span>
                 </div>
               )}
               {plan.flight && (
                 <div>
                   <span className="text-muted-foreground">Altitude:</span>{' '}
-                  {plan.flight && typeof plan.flight === 'object' && plan.flight !== null && plan.flight.altitude
-                    ? `${plan.flight.altitude}m`
-                    : 'Set'}
+                  {(() => {
+                    if (plan.flight && typeof plan.flight === 'object' && plan.flight !== null) {
+                      const flight = plan.flight as any;
+                      return flight.altitude ? `${flight.altitude}m` : 'Set';
+                    }
+                    return 'Set';
+                  })()}
                 </div>
               )}
               {plan.category && (

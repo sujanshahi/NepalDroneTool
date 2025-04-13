@@ -298,11 +298,21 @@ function renderFlightLogList(
                     <div>
                       <div className="font-medium">Observers</div>
                       <div>
-                        {Array.isArray(log.observers) 
-                          ? log.observers.join(', ') 
-                          : (typeof log.observers === 'string' 
-                              ? log.observers 
-                              : '')}
+                        {(() => {
+                          // Use IIFE to handle complex expressions safely
+                          if (Array.isArray(log.observers)) {
+                            return log.observers.join(', ');
+                          } else if (typeof log.observers === 'string') {
+                            return log.observers;
+                          } else if (log.observers && typeof log.observers === 'object') {
+                            try {
+                              return JSON.stringify(log.observers);
+                            } catch (e) {
+                              return '';
+                            }
+                          }
+                          return '';
+                        })()}
                       </div>
                     </div>
                   </div>

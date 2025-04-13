@@ -381,7 +381,7 @@ export function FlightLogForm({ initialValues, onSubmit, isLoading = false }: Fl
                 <FormControl>
                   <Input 
                     placeholder="e.g., Clear skies, light wind" 
-                    value={field.value || ''} 
+                    value={field.value === null ? '' : String(field.value || '')} 
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     ref={field.ref}
@@ -404,7 +404,7 @@ export function FlightLogForm({ initialValues, onSubmit, isLoading = false }: Fl
                   <Textarea 
                     placeholder="Add any observations, incidents, or other notes about the flight"
                     className="min-h-24"
-                    value={field.value || ''} 
+                    value={field.value === null ? '' : String(field.value || '')} 
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     ref={field.ref}
