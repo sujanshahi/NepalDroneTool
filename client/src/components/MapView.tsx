@@ -216,11 +216,16 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
         draggable: true
       }).addTo(markersLayerRef.current);
       
-      // Add popup to marker
+      // Add popup to marker with improved styling
       marker.bindPopup(`
-        <b>Selected Location</b><br>
-        ${flightPlan.location.address || 'Unknown address'}<br>
-        <a href="#" class="text-[#003893]" onclick="document.getElementById('setAsLocation').click(); return false;">Set as takeoff point</a>
+        <div class="text-sm">
+          <h3 class="font-bold text-gray-800 mb-1">Selected Location</h3>
+          <p class="text-gray-600 mb-2">${flightPlan.location.address || 'Unknown address'}</p>
+          <a href="#" class="inline-block text-blue-600 font-medium hover:text-blue-800 transition-colors" 
+             onclick="document.getElementById('setAsLocation').click(); return false;">
+             Set as takeoff point
+          </a>
+        </div>
       `).openPopup();
       
       // Handle marker drag
@@ -337,52 +342,64 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
             </Button>
             
             {mapControls.isDrawerOpen && (
-              <div className="absolute right-0 top-10 bg-white shadow-md rounded-md p-3 z-10 w-48">
-                <h3 className="font-medium text-sm mb-2">Toggle Layers</h3>
+              <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md p-3 z-10 w-52 border border-gray-200 info-drawer-backdrop">
+                <div className="flex justify-between items-center mb-3 border-b pb-2">
+                  <h3 className="font-semibold text-sm">Airspace Layers</h3>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-6 w-6 p-0"
+                    onClick={() => setMapControls(prev => ({ ...prev, isDrawerOpen: false }))}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x">
+                      <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                    </svg>
+                  </Button>
+                </div>
                 
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm cursor-pointer">
+                <div className="space-y-3">
+                  <label className="flex items-center text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors">
                     <input
                       type="checkbox"
                       checked={mapControls.layers.restricted}
                       onChange={() => toggleLayer('restricted')}
                       className="mr-2"
                     />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}` }}></div>
-                    {MAP_LAYERS.RESTRICTED}
+                    <div className="w-4 h-4 mr-2 rounded-sm" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.5, border: `1px solid ${ZONE_STYLES.restricted.color}` }}></div>
+                    <span className="text-gray-800">{MAP_LAYERS.RESTRICTED}</span>
                   </label>
                   
-                  <label className="flex items-center text-sm cursor-pointer">
+                  <label className="flex items-center text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors">
                     <input
                       type="checkbox"
                       checked={mapControls.layers.controlled}
                       onChange={() => toggleLayer('controlled')}
                       className="mr-2"
                     />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}` }}></div>
-                    {MAP_LAYERS.CONTROLLED}
+                    <div className="w-4 h-4 mr-2 rounded-sm" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.5, border: `1px solid ${ZONE_STYLES.controlled.color}` }}></div>
+                    <span className="text-gray-800">{MAP_LAYERS.CONTROLLED}</span>
                   </label>
                   
-                  <label className="flex items-center text-sm cursor-pointer">
+                  <label className="flex items-center text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors">
                     <input
                       type="checkbox"
                       checked={mapControls.layers.advisory}
                       onChange={() => toggleLayer('advisory')}
                       className="mr-2"
                     />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}` }}></div>
-                    {MAP_LAYERS.ADVISORY}
+                    <div className="w-4 h-4 mr-2 rounded-sm" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.5, border: `1px solid ${ZONE_STYLES.advisory.color}` }}></div>
+                    <span className="text-gray-800">{MAP_LAYERS.ADVISORY}</span>
                   </label>
                   
-                  <label className="flex items-center text-sm cursor-pointer">
+                  <label className="flex items-center text-sm cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors">
                     <input
                       type="checkbox"
                       checked={mapControls.layers.open}
                       onChange={() => toggleLayer('open')}
                       className="mr-2"
                     />
-                    <div className="w-3 h-3 mr-1" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}` }}></div>
-                    {MAP_LAYERS.OPEN}
+                    <div className="w-4 h-4 mr-2 rounded-sm" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.5, border: `1px solid ${ZONE_STYLES.open.color}` }}></div>
+                    <span className="text-gray-800">{MAP_LAYERS.OPEN}</span>
                   </label>
                 </div>
               </div>
@@ -420,26 +437,52 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       </div>
       
       <div className="p-3 border-t border-gray-200 bg-white">
+        <div className="text-xs text-gray-500 mb-2 font-medium">Map Legend</div>
         <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.restricted.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.restricted.color}`, borderRadius: '2px' }}></div>
-            <span>Restricted Airspace</span>
+          <div className="flex items-center px-2 py-1 bg-gray-50 rounded-md">
+            <div className="w-4 h-4 mr-2 rounded-sm" style={{ 
+              backgroundColor: ZONE_STYLES.restricted.fillColor, 
+              opacity: 0.5, 
+              border: `1px solid ${ZONE_STYLES.restricted.color}`,
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.05)' 
+            }}></div>
+            <span className="text-gray-800 font-medium">Restricted Airspace</span>
           </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.controlled.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.controlled.color}`, borderRadius: '2px' }}></div>
-            <span>Controlled Airspace</span>
+          <div className="flex items-center px-2 py-1 bg-gray-50 rounded-md">
+            <div className="w-4 h-4 mr-2 rounded-sm" style={{ 
+              backgroundColor: ZONE_STYLES.controlled.fillColor, 
+              opacity: 0.5, 
+              border: `1px solid ${ZONE_STYLES.controlled.color}`,
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.05)' 
+            }}></div>
+            <span className="text-gray-800 font-medium">Controlled Airspace</span>
           </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.advisory.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.advisory.color}`, borderRadius: '2px' }}></div>
-            <span>Advisory Area</span>
+          <div className="flex items-center px-2 py-1 bg-gray-50 rounded-md">
+            <div className="w-4 h-4 mr-2 rounded-sm" style={{ 
+              backgroundColor: ZONE_STYLES.advisory.fillColor, 
+              opacity: 0.5, 
+              border: `1px solid ${ZONE_STYLES.advisory.color}`,
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.05)' 
+            }}></div>
+            <span className="text-gray-800 font-medium">Advisory Area</span>
           </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 mr-2" style={{ backgroundColor: ZONE_STYLES.open.fillColor, opacity: 0.4, border: `1px solid ${ZONE_STYLES.open.color}`, borderRadius: '2px' }}></div>
-            <span>Open Airspace</span>
+          <div className="flex items-center px-2 py-1 bg-gray-50 rounded-md">
+            <div className="w-4 h-4 mr-2 rounded-sm" style={{ 
+              backgroundColor: ZONE_STYLES.open.fillColor, 
+              opacity: 0.5, 
+              border: `1px solid ${ZONE_STYLES.open.color}`,
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.05)' 
+            }}></div>
+            <span className="text-gray-800 font-medium">Open Airspace</span>
           </div>
-          <div className="flex items-center">
-            <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" alt="Marker" style={{ width: '16px', height: '16px' }} className="mr-2" />
-            <span>Selected Location</span>
+          <div className="flex items-center px-2 py-1 bg-gray-50 rounded-md">
+            <img 
+              src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" 
+              alt="Marker" 
+              style={{ width: '16px', height: '16px' }} 
+              className="mr-2"
+            />
+            <span className="text-gray-800 font-medium">Selected Location</span>
           </div>
         </div>
       </div>

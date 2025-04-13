@@ -88,6 +88,52 @@
   animation: fadeIn 0.2s ease-out;
 }
 
+/* Pulse effect for restricted zones */
+.pulse-circle {
+  animation: pulse 1.5s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    stroke-opacity: 0.8;
+    stroke-width: 1;
+    transform: scale(1);
+  }
+  50% {
+    stroke-opacity: 0.3;
+    stroke-width: 3;
+    transform: scale(1.03);
+  }
+  100% {
+    stroke-opacity: 0;
+    stroke-width: 5;
+    transform: scale(1.06);
+  }
+}
+
+/* Enhanced pulse effect for SVG paths */
+path.pulse {
+  animation: pathPulse 1.5s ease-out infinite;
+}
+
+@keyframes pathPulse {
+  0% {
+    stroke-opacity: 0.8;
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 1px #DC2626);
+  }
+  50% {
+    stroke-opacity: 0.4;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 4px #DC2626);
+  }
+  100% {
+    stroke-opacity: 0.1;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px #DC2626);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

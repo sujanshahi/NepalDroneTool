@@ -113,7 +113,25 @@ export const createZoneCircle = (
       className: 'pulse-circle'
     };
     const pulseCircle = L.circle(center, pulseOptions);
-    return L.layerGroup([circle, pulseCircle]);
+    
+    // Add click handler to pulse circle as well
+    pulseCircle.on('click', () => {
+      onZoneClick(zone);
+    });
+    
+    // Create a layer group with both circles
+    const group = L.layerGroup([circle, pulseCircle]);
+    
+    // Add popup to the main circle
+    circle.bindPopup(`
+      <div class="text-sm">
+        <h3 class="font-medium">${zone.name}</h3>
+        <p>${zone.description}</p>
+        <p class="text-xs mt-1 font-bold text-red-600">${zone.type.toUpperCase()} - NO DRONE ZONE</p>
+      </div>
+    `);
+    
+    return group;
   }
   
   circle.bindPopup(`

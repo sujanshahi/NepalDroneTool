@@ -21,27 +21,27 @@ export const MAP_LAYERS = {
 // Airspace zone styling
 export const ZONE_STYLES = {
   restricted: {
-    color: "#F44336",
-    fillColor: "#F44336",
-    fillOpacity: 0.4,
+    color: "#DC2626",
+    fillColor: "#DC2626",
+    fillOpacity: 0.3,
     weight: 2
   },
   controlled: {
-    color: "#FF9800",
-    fillColor: "#FF9800",
-    fillOpacity: 0.4,
+    color: "#EA580C",
+    fillColor: "#EA580C",
+    fillOpacity: 0.3,
     weight: 2
   },
   advisory: {
-    color: "#2196F3",
-    fillColor: "#2196F3",
-    fillOpacity: 0.4,
+    color: "#2563EB",
+    fillColor: "#2563EB",
+    fillOpacity: 0.3,
     weight: 2
   },
   open: {
-    color: "#4CAF50",
-    fillColor: "#4CAF50",
-    fillOpacity: 0.4,
+    color: "#16A34A",
+    fillColor: "#16A34A",
+    fillOpacity: 0.3,
     weight: 2
   }
 };
