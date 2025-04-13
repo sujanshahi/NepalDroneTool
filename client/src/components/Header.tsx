@@ -2,8 +2,8 @@ import React from 'react';
 import { useFlightPlan } from '@/context/FlightPlanContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
-import { LANGUAGES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
+import LanguageSwitch from '@/components/LanguageSwitch';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -47,20 +47,7 @@ const Header: React.FC = () => {
         
         <div className="flex items-center gap-4">
           {/* Language switcher */}
-          <div className="flex items-center bg-gray-200 rounded-md overflow-hidden">
-            <div 
-              className={`px-3 py-1 cursor-pointer text-sm ${activeLanguage === LANGUAGES.ENGLISH ? 'bg-[#003893] text-white' : ''}`}
-              onClick={() => setActiveLanguage(LANGUAGES.ENGLISH)}
-            >
-              English
-            </div>
-            <div 
-              className={`px-3 py-1 cursor-pointer text-sm ${activeLanguage === LANGUAGES.NEPALI ? 'bg-[#003893] text-white' : ''}`}
-              onClick={() => setActiveLanguage(LANGUAGES.NEPALI)}
-            >
-              नेपाली
-            </div>
-          </div>
+          <LanguageSwitch />
           
           {/* User profile dropdown */}
           {user && (

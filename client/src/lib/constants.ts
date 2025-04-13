@@ -48,8 +48,18 @@ export const ZONE_STYLES = {
 
 // Language options
 export const LANGUAGES = {
-  ENGLISH: "English",
-  NEPALI: "नेपाली"
+  en: {
+    code: "en",
+    native: "English",
+    english: "English",
+    flag: "🇬🇧"
+  },
+  ne: {
+    code: "ne",
+    native: "नेपाली",
+    english: "Nepali",
+    flag: "🇳🇵"
+  }
 };
 
 // Drone flight altitude limits in Nepal (in meters)

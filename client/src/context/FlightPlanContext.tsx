@@ -34,7 +34,7 @@ export const FlightPlanContext = createContext<FlightPlanContextType | undefined
 // Provider component
 export const FlightPlanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [flightPlan, setFlightPlan] = useState<FlightPlan>(initialFlightPlan);
-  const [activeLanguage, setActiveLanguage] = useState<string>("English");
+  const [activeLanguage, setActiveLanguage] = useState<string>("en");
 
   // Set current step
   const setStep = (step: number) => {
