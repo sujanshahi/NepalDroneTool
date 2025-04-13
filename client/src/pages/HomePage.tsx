@@ -72,9 +72,9 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Header />
       
-      <main className="flex-grow flex flex-col">
-        <div className="flex flex-col md:flex-row h-full">
-          <div className="md:w-80 w-full bg-white shadow-lg">
+      <main className="flex-grow flex flex-col overflow-hidden">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-64px)]">
+          <div className="md:w-80 w-full bg-white shadow-lg overflow-y-auto">
             <MapSidebar
               cursorPosition={cursorPosition}
               onCenterChange={handleCenterChange}
@@ -92,9 +92,10 @@ const HomePage: React.FC = () => {
             />
           </div>
         </div>
-        <div className="container mx-auto px-4 py-4">
+        {/* Hide the SidePanel for now, we'll add it back as needed */}
+        {/* <div className="container mx-auto px-4 py-4">
           <SidePanel />
-        </div>
+        </div> */}
       </main>
       
       <InfoDrawer 

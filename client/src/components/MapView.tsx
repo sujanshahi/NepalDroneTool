@@ -318,14 +318,14 @@ const MapView: React.FC<MapViewProps> = ({
   };
   
   return (
-    <div className={`${isFullScreen ? 'fixed inset-0 z-50' : 'min-h-[600px]'}`}>
+    <div className={`h-full ${isFullScreen ? 'fixed inset-0 z-50' : ''}`}>
 
       <div 
         ref={mapContainerRef}
-        className={`map-container bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 ${
+        className={`map-container bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-all duration-300 h-full ${
           isFullScreen 
-            ? 'flex-1 rounded-none' 
-            : 'flex-1'
+            ? 'rounded-none' 
+            : ''
         }`}
       >
         <div className="p-3 border-b border-gray-200 flex justify-between items-center">
@@ -431,7 +431,7 @@ const MapView: React.FC<MapViewProps> = ({
           </div>
         </div>
         
-        <div id="map" className="flex-grow" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : '400px' }}>
+        <div id="map" className="flex-grow" style={{ minHeight: isFullScreen ? 'calc(100vh - 140px)' : 'calc(100vh - 164px)' }}>
           {/* Map will be initialized here via Leaflet */}
         </div>
         
