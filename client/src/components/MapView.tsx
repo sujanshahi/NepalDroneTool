@@ -323,6 +323,11 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
     }
   };
   
+  // Store watch ID for cleanup
+  const watchIdRef = useRef<number | null>(null);
+  const accuracyCircleRef = useRef<L.Circle | null>(null);
+  const locationStyleRef = useRef<HTMLStyleElement | null>(null);
+  
   // Track user's location with blue dot
   const trackUserLocation = () => {
     if (!mapRef.current) return;
@@ -333,21 +338,49 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       if (newTrackingState) {
         // Start tracking
         if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            // Success callback
-            (position) => {
-              const { latitude, longitude } = position.coords;
-              const userLatLng = L.latLng(latitude, longitude);
-              setUserLocation(userLatLng);
-              
-              // Center map on user's location
-              mapRef.current?.setView(userLatLng, 14);
+          // Create pulsing animation style if not already there
+          if (!locationStyleRef.current) {
+            const style = document.createElement('style');
+            style.innerHTML = `
+              .user-location-marker {
+                animation: pulse-blue 2s infinite;
+              }
+              @keyframes pulse-blue {
+                0% {
+                  transform: scale(0.8);
+                  opacity: 0.7;
+                }
+                50% {
+                  transform: scale(1.2);
+                  opacity: 0.9;
+                }
+                100% {
+                  transform: scale(0.8);
+                  opacity: 0.7;
+                }
+              }
+            `;
+            document.head.appendChild(style);
+            locationStyleRef.current = style;
+          }
+          
+          // Initialize position tracking
+          const initPosition = (position: GeolocationPosition) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            const userLatLng = L.latLng(latitude, longitude);
+            
+            // Set user location state
+            setUserLocation(userLatLng);
+            
+            // Center map on user's location
+            if (mapRef.current) {
+              mapRef.current.setView(userLatLng, 15);
               
               // Create or update blue dot marker
               if (userLocationMarkerRef.current) {
                 userLocationMarkerRef.current.setLatLng(userLatLng);
               } else {
-                // Create pulsing blue dot
+                // Create pulsing blue dot marker
                 const userMarker = L.circleMarker(userLatLng, {
                   radius: 8,
                   color: '#1E90FF',
@@ -356,104 +389,81 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
                   weight: 2,
                   opacity: 0.9,
                   className: 'user-location-marker'
-                });
+                }).addTo(mapRef.current);
                 
-                // Ensure map reference is valid before adding
-                if (mapRef.current) {
-                  userMarker.addTo(mapRef.current);
+                // Move the marker to the top
+                if (userMarker.getElement()) {
+                  userMarker.getElement()?.style.setProperty('z-index', '1000');
                 }
                 
                 userLocationMarkerRef.current = userMarker;
-                
-                // Add accuracy circle
-                let accuracyCircle: L.Circle;
-                
-                if (mapRef.current) {
-                  accuracyCircle = L.circle(userLatLng, {
-                    radius: position.coords.accuracy,
-                    color: '#4B9FFF',
-                    fillColor: '#4B9FFF',
-                    fillOpacity: 0.1,
-                    weight: 1,
-                    opacity: 0.4,
-                    interactive: false
-                  }).addTo(mapRef.current);
-                } else {
-                  // Create circle not attached to a map yet
-                  accuracyCircle = L.circle(userLatLng, {
-                    radius: position.coords.accuracy,
-                    color: '#4B9FFF',
-                    fillColor: '#4B9FFF',
-                    fillOpacity: 0.1,
-                    weight: 1,
-                    opacity: 0.4,
-                    interactive: false
-                  });
-                }
-                
-                // Create pulsing animation
-                const style = document.createElement('style');
-                style.innerHTML = `
-                  .user-location-marker {
-                    animation: pulse-blue 2s infinite;
-                  }
-                  @keyframes pulse-blue {
-                    0% {
-                      transform: scale(0.8);
-                      opacity: 0.7;
-                    }
-                    50% {
-                      transform: scale(1.2);
-                      opacity: 0.9;
-                    }
-                    100% {
-                      transform: scale(0.8);
-                      opacity: 0.7;
-                    }
-                  }
-                `;
-                document.head.appendChild(style);
-                
-                // Start continuous watching
-                const watchId = navigator.geolocation.watchPosition(
-                  (updatedPosition) => {
-                    const { latitude, longitude, accuracy } = updatedPosition.coords;
-                    const updatedLatLng = L.latLng(latitude, longitude);
-                    
-                    // Update marker positions
-                    userLocationMarkerRef.current?.setLatLng(updatedLatLng);
-                    accuracyCircle.setLatLng(updatedLatLng);
-                    accuracyCircle.setRadius(accuracy);
-                    
-                    setUserLocation(updatedLatLng);
-                  },
-                  (error) => {
-                    console.error("Error watching user position:", error.message);
-                    setIsTrackingLocation(false);
-                  },
-                  { enableHighAccuracy: true }
-                );
-                
-                // Store watch ID for cleanup
-                return () => {
-                  navigator.geolocation.clearWatch(watchId);
-                  if (mapRef.current) {
-                    mapRef.current.removeLayer(userMarker);
-                    mapRef.current.removeLayer(accuracyCircle);
-                  }
-                  document.head.removeChild(style);
-                  userLocationMarkerRef.current = null;
-                };
+              }
+              
+              // Create or update accuracy circle
+              if (accuracyCircleRef.current) {
+                accuracyCircleRef.current.setLatLng(userLatLng);
+                accuracyCircleRef.current.setRadius(accuracy);
+              } else {
+                // Create new accuracy circle
+                accuracyCircleRef.current = L.circle(userLatLng, {
+                  radius: accuracy,
+                  color: '#4B9FFF',
+                  fillColor: '#4B9FFF',
+                  fillOpacity: 0.1,
+                  weight: 1,
+                  opacity: 0.4,
+                  interactive: false
+                }).addTo(mapRef.current);
+              }
+            }
+          };
+          
+          // First get current position immediately
+          navigator.geolocation.getCurrentPosition(
+            initPosition,
+            (error) => {
+              console.error("Error getting initial user location:", error.message);
+              setIsTrackingLocation(false);
+              alert("Unable to access your location. Please check your device permissions and try again.");
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+          
+          // Then start continuous high-precision watching with more frequent updates
+          watchIdRef.current = navigator.geolocation.watchPosition(
+            (updatedPosition) => {
+              const { latitude, longitude, accuracy } = updatedPosition.coords;
+              const updatedLatLng = L.latLng(latitude, longitude);
+              
+              // Update marker positions
+              if (userLocationMarkerRef.current) {
+                userLocationMarkerRef.current.setLatLng(updatedLatLng);
+              }
+              
+              if (accuracyCircleRef.current) {
+                accuracyCircleRef.current.setLatLng(updatedLatLng);
+                accuracyCircleRef.current.setRadius(accuracy);
+              }
+              
+              // Update state
+              setUserLocation(updatedLatLng);
+              
+              // Keep map centered on user if we're in following mode
+              // (Could add a separate state to toggle this behavior)
+              if (mapRef.current) {
+                mapRef.current.setView(updatedLatLng);
               }
             },
-            // Error callback
             (error) => {
-              console.error("Error getting user location:", error.message);
-              setIsTrackingLocation(false);
-              alert("Unable to access your location. Please check your device permissions.");
+              console.error("Error watching user position:", error.message);
+              // Don't automatically turn off tracking on temporary errors
+              console.warn("Location tracking error, but continuing to try...");
             },
-            // Options
-            { enableHighAccuracy: true }
+            { 
+              enableHighAccuracy: true, // Use GPS if available
+              timeout: 5000,           // 5-second timeout
+              maximumAge: 0            // Don't use cached positions
+            }
           );
         } else {
           alert("Geolocation is not supported by your browser");
@@ -461,9 +471,21 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
         }
       } else {
         // Stop tracking
+        if (watchIdRef.current) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+        
+        // Clean up marker
         if (userLocationMarkerRef.current && mapRef.current) {
           mapRef.current.removeLayer(userLocationMarkerRef.current);
           userLocationMarkerRef.current = null;
+        }
+        
+        // Clean up accuracy circle
+        if (accuracyCircleRef.current && mapRef.current) {
+          mapRef.current.removeLayer(accuracyCircleRef.current);
+          accuracyCircleRef.current = null;
         }
       }
       
@@ -538,6 +560,36 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
     
     return () => {
       document.head.removeChild(styleEl);
+    };
+  }, []);
+  
+  // Cleanup location tracking resources on component unmount
+  useEffect(() => {
+    return () => {
+      // Clean up watch position
+      if (watchIdRef.current) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      
+      // Clean up location style
+      if (locationStyleRef.current) {
+        document.head.removeChild(locationStyleRef.current);
+        locationStyleRef.current = null;
+      }
+      
+      // Clean up markers and circles
+      if (mapRef.current) {
+        if (userLocationMarkerRef.current) {
+          mapRef.current.removeLayer(userLocationMarkerRef.current);
+          userLocationMarkerRef.current = null;
+        }
+        
+        if (accuracyCircleRef.current) {
+          mapRef.current.removeLayer(accuracyCircleRef.current);
+          accuracyCircleRef.current = null;
+        }
+      }
     };
   }, []);
 
