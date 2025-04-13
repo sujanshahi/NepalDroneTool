@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { FlightLog, Aircraft } from "@shared/schema";
+import { Aircraft } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +22,29 @@ import { Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Extended FlightLog type for the frontend
+interface FlightLog {
+  id: number;
+  userId: number;
+  aircraftId: number;
+  flightPlanId: number | null;
+  pilotName: string;
+  startTime: string;
+  endTime: string;
+  duration: number | null;
+  weatherConditions: string | null;
+  notes: string | null;
+  observers: string[] | string | null;
+  location?: {
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+  attachments?: any;
+}
 
 export default function FlightLogViewPage() {
   const { id } = useParams<{ id: string }>();
@@ -64,7 +86,7 @@ export default function FlightLogViewPage() {
 
   // Mutation for deleting a flight log
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string | number) => {
       await apiRequest('DELETE', `/api/flight-logs/${id}`);
     },
     onSuccess: () => {
@@ -99,7 +121,9 @@ export default function FlightLogViewPage() {
   };
 
   // Format duration in minutes to hours and minutes
-  const formatDuration = (minutes: number) => {
+  const formatDuration = (minutes: number | null) => {
+    if (minutes === null) return "Not specified";
+    
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 
