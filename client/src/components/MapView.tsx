@@ -10,6 +10,7 @@ import {
 import { airspaceZones } from '@/data/airspaceData';
 import { AirspaceZone, MapControls } from '@/lib/types';
 import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode, isPointInZone } from '@/lib/mapUtils';
+import locationSmoother from '@/lib/locationSmoother';
 import { Layers, HelpCircle, Focus, Maximize, Minimize, Navigation, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -470,6 +471,11 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
           // Initialize position tracking
           const initPosition = (position: GeolocationPosition) => {
             const { latitude, longitude, accuracy } = position.coords;
+            
+            // Reset position history and add initial position
+            locationSmoother.reset();
+            locationSmoother.addPosition(latitude, longitude);
+            
             const userLatLng = L.latLng(latitude, longitude);
             
             // Set user location state
@@ -500,7 +506,7 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
                 userLocationMarkerRef.current = userMarker;
               }
               
-              // Create or update accuracy circle
+              // Create or update accuracy circle (with reduced opacity for less visual noise)
               if (accuracyCircleRef.current) {
                 accuracyCircleRef.current.setLatLng(userLatLng);
                 accuracyCircleRef.current.setRadius(accuracy);
@@ -510,9 +516,9 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
                   radius: accuracy,
                   color: '#4B9FFF',
                   fillColor: '#4B9FFF',
-                  fillOpacity: 0.1,
+                  fillOpacity: 0.08, // Reduced opacity 
                   weight: 1,
-                  opacity: 0.4,
+                  opacity: 0.3,      // More subtle border
                   interactive: false
                 }).addTo(mapRef.current);
               }
@@ -527,32 +533,44 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
               setIsTrackingLocation(false);
               alert("Unable to access your location. Please check your device permissions and try again.");
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 2000 }
           );
           
-          // Then start continuous high-precision watching with more frequent updates
+          // Then start continuous high-precision watching with stabilized position updates
           watchIdRef.current = navigator.geolocation.watchPosition(
             (updatedPosition) => {
               const { latitude, longitude, accuracy } = updatedPosition.coords;
-              const updatedLatLng = L.latLng(latitude, longitude);
               
-              // Update marker positions
-              if (userLocationMarkerRef.current) {
-                userLocationMarkerRef.current.setLatLng(updatedLatLng);
-              }
-              
-              if (accuracyCircleRef.current) {
-                accuracyCircleRef.current.setLatLng(updatedLatLng);
-                accuracyCircleRef.current.setRadius(accuracy);
-              }
-              
-              // Update state
-              setUserLocation(updatedLatLng);
-              
-              // Keep map centered on user if we're in following mode
-              // (Could add a separate state to toggle this behavior)
-              if (mapRef.current) {
-                mapRef.current.setView(updatedLatLng);
+              // Check if this position update should be applied based on movement threshold
+              if (locationSmoother.shouldUpdatePosition(latitude, longitude)) {
+                // Add to position history
+                locationSmoother.addPosition(latitude, longitude);
+                
+                // Get smoothed position
+                const smoothedPosition = locationSmoother.getSmoothedPosition();
+                
+                if (smoothedPosition) {
+                  // Update marker positions with smoothed coordinates
+                  if (userLocationMarkerRef.current) {
+                    userLocationMarkerRef.current.setLatLng(smoothedPosition);
+                  }
+                  
+                  if (accuracyCircleRef.current) {
+                    accuracyCircleRef.current.setLatLng(smoothedPosition);
+                    // Only update accuracy circle size if it changed significantly
+                    if (Math.abs(accuracyCircleRef.current.getRadius() - accuracy) > 5) {
+                      accuracyCircleRef.current.setRadius(accuracy);
+                    }
+                  }
+                  
+                  // Update state with smoothed coordinates
+                  setUserLocation(smoothedPosition);
+                  
+                  // Keep map centered on user if we're in following mode
+                  if (mapRef.current) {
+                    mapRef.current.setView(smoothedPosition);
+                  }
+                }
               }
             },
             (error) => {
@@ -561,9 +579,9 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
               console.warn("Location tracking error, but continuing to try...");
             },
             { 
-              enableHighAccuracy: true, // Use GPS if available
-              timeout: 5000,           // 5-second timeout
-              maximumAge: 0            // Don't use cached positions
+              enableHighAccuracy: true,  // Use GPS if available
+              timeout: 10000,            // 10-second timeout for more reliable readings
+              maximumAge: 2000           // Allow positions up to 2 seconds old
             }
           );
         } else {
