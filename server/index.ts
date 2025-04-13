@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import { createServer } from "http";
 
 // Load environment variables
 dotenv.config();
@@ -62,15 +63,29 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Serve the app on port 5000 (required for Replit workflow)
+  // and also on port 3000 (as requested)
+  const port5000 = 5000;
+  const port3000 = 3000;
+  
+  // Listen on port 5000 for Replit workflow
   server.listen({
-    port,
+    port: port5000,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`serving on port ${port5000}`);
+    console.log(`Server running on port ${port5000}`);
+    
+    // Also listen on port 3000
+    const serverCopy = createServer(app);
+    serverCopy.listen({
+      port: port3000,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`also serving on port ${port3000}`);
+      console.log(`Server also running on port ${port3000}`);
+    });
   });
 })();
