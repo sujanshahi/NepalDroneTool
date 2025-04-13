@@ -9,7 +9,7 @@ import {
 } from '@/lib/constants';
 import { airspaceZones } from '@/data/airspaceData';
 import { AirspaceZone, MapControls } from '@/lib/types';
-import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode } from '@/lib/mapUtils';
+import { setupCustomMarkerIcon, createZoneCircle, fetchNepalOutline, reverseGeocode, isPointInZone } from '@/lib/mapUtils';
 import { Layers, HelpCircle, Focus, Maximize, Minimize, Navigation, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -293,18 +293,105 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
     }
   }, [flightPlan.location?.coordinates]);
   
+  // Determine the airspace type based on coordinates
+  const determineAirspaceType = (coordinates: [number, number]): string => {
+    if (!mapRef.current) return 'unknown';
+    
+    // Check if point is in any of the airspace zones
+    for (const zone of airspaceZones) {
+      // Check all restricted zones first since they're highest priority
+      if (zone.type === 'restricted') {
+        if (isPointInZone(coordinates, zone, mapRef.current)) {
+          return 'restricted';
+        }
+      }
+    }
+    
+    // Then check controlled zones
+    for (const zone of airspaceZones) {
+      if (zone.type === 'controlled') {
+        if (isPointInZone(coordinates, zone, mapRef.current)) {
+          return 'controlled';
+        }
+      }
+    }
+    
+    // Then check advisory zones
+    for (const zone of airspaceZones) {
+      if (zone.type === 'advisory') {
+        if (isPointInZone(coordinates, zone, mapRef.current)) {
+          return 'advisory';
+        }
+      }
+    }
+    
+    // If not in any specific zone, it's open airspace
+    return 'open';
+  };
+
   // Handle location selection (either by map click or marker drag)
   const handleLocationSelect = async (coordinates: [number, number]) => {
     try {
       // Perform reverse geocoding
       const locationInfo = await reverseGeocode(coordinates);
       
-      // Update location in flight plan
+      // Determine airspace type
+      const airspaceType = determineAirspaceType(coordinates);
+      
+      // Add or update marker
+      if (mapRef.current) {
+        // First clear any existing markers in the markers layer
+        markersLayerRef.current.clearLayers();
+        
+        // Create the marker icon
+        const icon = setupCustomMarkerIcon();
+        
+        // Add new marker
+        const marker = L.marker(coordinates, {
+          icon,
+          draggable: true
+        }).addTo(markersLayerRef.current);
+        
+        // Add popup to marker
+        marker.bindPopup(`
+          <div class="text-sm">
+            <h3 class="font-bold text-gray-800 mb-1">Selected Location</h3>
+            <p class="text-gray-600 mb-1">${locationInfo.address || 'Unknown address'}</p>
+            <p class="text-xs ${
+              airspaceType === 'restricted' ? 'text-red-600' : 
+              airspaceType === 'controlled' ? 'text-orange-500' : 
+              airspaceType === 'advisory' ? 'text-blue-500' : 
+              'text-green-600'
+            } font-medium">
+              ${
+                airspaceType === 'restricted' ? 'Restricted Airspace' : 
+                airspaceType === 'controlled' ? 'Controlled Airspace' : 
+                airspaceType === 'advisory' ? 'Advisory Airspace' : 
+                'Open Airspace'
+              }
+            </p>
+          </div>
+        `).openPopup();
+        
+        // Add drag end event to update coordinates
+        marker.on('dragend', async () => {
+          const newPosition = marker.getLatLng();
+          await handleLocationSelect([newPosition.lat, newPosition.lng]);
+        });
+      }
+      
+      // Update location in flight plan context
       updateLocation({
         coordinates,
         address: locationInfo.address,
-        district: locationInfo.district
+        district: locationInfo.district,
+        airspaceType
       });
+      
+      // Center map on the selected location
+      if (mapRef.current) {
+        mapRef.current.setView(coordinates, 13);
+      }
       
     } catch (error) {
       console.error('Error selecting location:', error);

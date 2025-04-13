@@ -6,7 +6,8 @@ import {
   ArrowLeft, 
   ArrowRight, 
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -82,18 +83,132 @@ const SidePanel: React.FC = () => {
     } as any);
   };
   
-  // Handle address search
-  const handleAddressSearch = (e: React.FormEvent) => {
+  // State for manual coordinate input
+  const [manualLatitude, setManualLatitude] = useState<string>('');
+  const [manualLongitude, setManualLongitude] = useState<string>('');
+  const [showManualInput, setShowManualInput] = useState<boolean>(false);
+  
+  // Function to determine if a string is a valid coordinate value
+  const isValidCoordinate = (value: string): boolean => {
+    // Allow empty string for incomplete input
+    if (value === '') return true;
+    // Use regex to check valid format (allow decimal points and negative signs)
+    return /^-?\d*\.?\d*$/.test(value);
+  };
+
+  // Handle manual coordinate change with validation
+  const handleLatitudeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (isValidCoordinate(value)) {
+      setManualLatitude(value);
+    }
+  };
+  
+  const handleLongitudeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (isValidCoordinate(value)) {
+      setManualLongitude(value);
+    }
+  };
+  
+  // Handle submitting manual coordinates
+  const handleManualCoordinateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This would typically connect to a geocoding service
-    // For this demo, we'll update with simulated coordinates for Kathmandu
-    const coordinates: [number, number] = [27.7172, 85.3240];
     
-    updateLocation({
-      coordinates,
-      address: "Thamel, Kathmandu, Nepal",
-      district: "Kathmandu"
-    });
+    // Validate coordinates
+    const lat = parseFloat(manualLatitude);
+    const lng = parseFloat(manualLongitude);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      alert('Please enter valid latitude and longitude values');
+      return;
+    }
+    
+    // Check coordinate range
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      alert('Latitude must be between -90 and 90, and longitude must be between -180 and 180');
+      return;
+    }
+    
+    try {
+      // Perform reverse geocoding to get address info
+      const locationInfo = await reverseGeocode([lat, lng]);
+      
+      // Update location in flight plan
+      updateLocation({
+        coordinates: [lat, lng],
+        address: locationInfo.address,
+        district: locationInfo.district
+      });
+      
+      // Clear manual input fields
+      setManualLatitude('');
+      setManualLongitude('');
+      setShowManualInput(false);
+    } catch (error) {
+      console.error('Error with manual coordinates:', error);
+      alert('There was an error processing your coordinates. Please try again.');
+    }
+  };
+  
+  // Handle address search
+  const handleAddressSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!searchInput.trim()) {
+      alert('Please enter a location to search');
+      return;
+    }
+    
+    try {
+      // This would typically connect to a geocoding service
+      // For Nepal, we need to implement a service that converts place names to coordinates
+      
+      let coordinates: [number, number];
+      let address = '';
+      let district = '';
+      
+      // Simple mapping of common Nepal locations (would be replaced with actual geocoding service)
+      if (searchInput.toLowerCase().includes('kathmandu')) {
+        coordinates = [27.7172, 85.3240];
+        address = "Kathmandu, Nepal";
+        district = "Kathmandu";
+      } else if (searchInput.toLowerCase().includes('pokhara')) {
+        coordinates = [28.2096, 83.9856];
+        address = "Pokhara, Nepal";
+        district = "Kaski";
+      } else if (searchInput.toLowerCase().includes('chitwan')) {
+        coordinates = [27.5291, 84.3542];
+        address = "Chitwan, Nepal";
+        district = "Chitwan";
+      } else if (searchInput.toLowerCase().includes('lumbini')) {
+        coordinates = [27.4833, 83.2767];
+        address = "Lumbini, Nepal";
+        district = "Rupandehi";
+      } else if (searchInput.toLowerCase().includes('everest') || searchInput.toLowerCase().includes('sagarmatha')) {
+        coordinates = [27.9881, 86.9250];
+        address = "Mount Everest, Nepal";
+        district = "Solukhumbu";
+      } else {
+        // Fallback for unknown locations (would be replaced with proper geocoding)
+        alert('Location not found. Please try another search term or use manual coordinates.');
+        return;
+      }
+      
+      // Update location in flight plan
+      updateLocation({
+        coordinates,
+        address,
+        district
+      });
+      
+      // Clear search input
+      setSearchInput('');
+      
+    } catch (error) {
+      console.error('Error searching for location:', error);
+      alert('There was an error searching for this location. Please try again or use manual coordinates.');
+    }
   };
   
   // Render step indicators
@@ -270,7 +385,69 @@ const SidePanel: React.FC = () => {
               <span>Search</span>
             </Button>
           </form>
+          <div className="mt-2 flex items-center">
+            <Button 
+              type="button" 
+              variant="outline"
+              size="sm"
+              onClick={() => setShowManualInput(!showManualInput)}
+              className="text-xs flex items-center"
+            >
+              <MapPin className="h-3 w-3 mr-1" />
+              {showManualInput ? 'Hide Coordinate Input' : 'Enter Coordinates Manually'}
+            </Button>
+          </div>
         </div>
+        
+        {showManualInput && (
+          <div className="mb-4 p-3 border border-gray-200 rounded-md bg-gray-50">
+            <h3 className="font-medium text-gray-700 text-sm mb-2">Manual Coordinate Input</h3>
+            <form onSubmit={handleManualCoordinateSubmit}>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                  <Label htmlFor="manual-lat" className="block text-xs font-medium text-gray-700 mb-1">
+                    Latitude (°N)
+                  </Label>
+                  <Input
+                    type="text"
+                    id="manual-lat"
+                    placeholder="27.7172"
+                    value={manualLatitude}
+                    onChange={handleLatitudeChange}
+                    className="text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="manual-lng" className="block text-xs font-medium text-gray-700 mb-1">
+                    Longitude (°E)
+                  </Label>
+                  <Input
+                    type="text"
+                    id="manual-lng"
+                    placeholder="85.3240"
+                    value={manualLongitude}
+                    onChange={handleLongitudeChange}
+                    className="text-sm"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  size="sm"
+                  className="bg-[#003893] text-white hover:bg-[#003893]/90 text-xs"
+                >
+                  Set Location
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Enter decimal coordinates (e.g., 27.7172, 85.3240)
+              </p>
+            </form>
+          </div>
+        )}
         
         {flightPlan.location?.coordinates && (
           <Card className="bg-gray-100 p-3 rounded-md mb-4">
