@@ -66,12 +66,12 @@ const AIRCRAFT_TYPES = [
 interface AircraftFormData {
   id?: number;
   name: string;
-  manufacturer: string;
-  model: string;
-  serialNumber: string;
+  manufacturer?: string;
+  model?: string;
+  serialNumber?: string;
   type: string;
-  weight: number;
-  maxFlightTime: number;
+  weight?: number | null;
+  maxFlightTime?: number | null;
 }
 
 const AircraftPage: React.FC = () => {
@@ -97,7 +97,7 @@ const AircraftPage: React.FC = () => {
 
   // Create aircraft mutation
   const createAircraftMutation = useMutation({
-    mutationFn: async (data: AircraftFormData) => {
+    mutationFn: async (data: z.infer<typeof aircraftFormSchema>) => {
       const res = await apiRequest('POST', '/api/aircraft', data);
       return await res.json();
     },
@@ -121,7 +121,7 @@ const AircraftPage: React.FC = () => {
 
   // Update aircraft mutation
   const updateAircraftMutation = useMutation({
-    mutationFn: async (data: AircraftFormData) => {
+    mutationFn: async (data: z.infer<typeof aircraftFormSchema>) => {
       const res = await apiRequest('PUT', `/api/aircraft/${data.id}`, data);
       return await res.json();
     },
@@ -441,7 +441,7 @@ const AircraftPage: React.FC = () => {
                         id="weight"
                         name="weight"
                         type="number"
-                        value={formData.weight}
+                        value={formData.weight?.toString() || ''}
                         onChange={handleInputChange}
                         placeholder="Weight in grams"
                         min={0}
@@ -454,7 +454,7 @@ const AircraftPage: React.FC = () => {
                         id="maxFlightTime"
                         name="maxFlightTime"
                         type="number"
-                        value={formData.maxFlightTime}
+                        value={formData.maxFlightTime?.toString() || ''}
                         onChange={handleInputChange}
                         placeholder="Flight time in minutes"
                         min={0}

@@ -75,35 +75,6 @@ const Header: React.FC = () => {
           <Button 
             variant="ghost" 
             className="flex items-center gap-1"
-            onClick={() => navigate('/map?basemap=satellite')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
-              <path d="m15 4-4-2-4 2"></path>
-              <path d="M4 11h16"></path>
-              <path d="M9 15v2"></path>
-              <path d="M15 15v2"></path>
-            </svg>
-            Satellite
-          </Button>
-
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-1"
-            onClick={() => navigate('/map?basemap=terrain')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <path d="m2 22 10-10 10 10"></path>
-              <path d="m4 18 8-8 8 8"></path>
-              <path d="m6 14 6-6 6 6"></path>
-              <path d="m8 10 4-4 4 4"></path>
-            </svg>
-            Terrain
-          </Button>
-
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-1"
             onClick={() => navigate('/regulations')}
           >
             <FileText className="w-4 h-4" />
