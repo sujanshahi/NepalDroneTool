@@ -1,0 +1,86 @@
+Great! Here's an **enhanced prompt** combining **Flight Plan creation** with a **Flight Log tracking system**, so users can not only plan their drone missions but also **log their real-world flights** for record-keeping, compliance, and review.
+
+---
+
+### ✈️ Prompt: Implement Flight Plan & Flight Log Tracking System with Database Storage
+
+I want to build a full-featured **Flight Planning and Logging** system in my web application. The system should allow **registered users** to:
+
+---
+
+### ✅ Part 1: Flight Plan System
+
+1. **Create & Save Flight Plans**
+   - Draw flight paths (polyline or polygon) on the map.
+   - Capture metadata:
+     - Title of operation
+     - Category (Micro, Basic, Advanced)
+     - Operation area bounds
+     - Pilot location
+     - Tools used (Measurement tool, zone overlays, etc.)
+     - Additional notes
+   - Save the data in database (MongoDB/PostgreSQL).
+   - Allow downloading flight plan as PDF/GeoJSON.
+
+2. **View/Edit/Delete Flight Plans**
+   - Show a list of saved flight plans.
+   - Include timestamp, preview map, and summary.
+   - Options to update or delete a plan.
+
+---
+
+### ✅ Part 2: Flight Log System
+
+1. **Flight Log Entry**
+   - After completing a flight, users should be able to **log the mission details**, either by:
+     - Selecting a previous Flight Plan and attaching a flight log to it.
+     - Or logging a **free-form** flight (no prior plan).
+   - Input Fields:
+     - Flight Plan ID (if available)
+     - Drone used (dropdown)
+     - Pilot in command
+     - Observers/crew (optional)
+     - Start/End time
+     - Actual flight coordinates or track (optional)
+     - Weather conditions
+     - Mission notes / incident notes
+     - Attachments (images, videos, documents)
+
+2. **Store in Database**
+Example MongoDB schema:
+```json
+{
+  "userId": "abc123",
+  "flightPlanId": "xyz789", 
+  "droneModel": "DJI Mavic 3 Enterprise",
+  "startTime": "2025-04-12T14:00:00Z",
+  "endTime": "2025-04-12T14:30:00Z",
+  "flightTrack": [
+    { "lat": 27.6984, "lng": 85.3245 },
+    { "lat": 27.6987, "lng": 85.3250 }
+  ],
+  "notes": "Smooth mission. Windy near the hilltop.",
+  "attachments": [ "photo1.jpg", "logfile.csv" ],
+  "createdAt": "2025-04-12T14:35:00Z"
+}
+```
+
+3. **View Past Flight Logs**
+   - Add a **“My Logs”** section with:
+     - Search by date or drone type
+     - Preview map of track flown
+     - Mission summary
+     - Link back to original Flight Plan if available
+     - Export as PDF/CSV
+
+---
+
+### ✅ Optional Add-ons:
+- Real-time location tracking during flight (WebSocket or PWA support)
+- Upload DJI/KML logs and parse them
+- Export logs for compliance reports
+- Analytics dashboard (Flight hours, locations, drone usage)
+
+---
+
+Let me know if you’d like a **starter template or code snippets** for React + Express + MongoDB, and I’ll generate it right away.

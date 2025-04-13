@@ -3,7 +3,8 @@ import {
   flightPlans, type FlightPlan, type InsertFlightPlan,
   airspaceZones, type AirspaceZone, type InsertAirspaceZone,
   regulations, type Regulation, type InsertRegulation,
-  aircraft, type Aircraft, type InsertAircraft
+  aircraft, type Aircraft, type InsertAircraft,
+  flightLogs, type FlightLog, type InsertFlightLog
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { eq } from "drizzle-orm";
@@ -23,7 +24,7 @@ const pool = new Pool({
 });
 
 // Drizzle ORM instance
-const db = drizzle({ client: pool, schema: { users, flightPlans, airspaceZones, regulations, aircraft } });
+const db = drizzle({ client: pool, schema: { users, flightPlans, airspaceZones, regulations, aircraft, flightLogs } });
 
 // Interface for storage operations
 export interface IStorage {
@@ -57,6 +58,14 @@ export interface IStorage {
   getRegulation(id: number): Promise<Regulation | undefined>;
   getAllRegulations(): Promise<Regulation[]>;
   createRegulation(regulation: InsertRegulation): Promise<Regulation>;
+  
+  // Flight log operations
+  getFlightLog(id: number): Promise<FlightLog | undefined>;
+  getFlightLogsByUserId(userId: number): Promise<FlightLog[]>;
+  getFlightLogsByFlightPlanId(flightPlanId: number): Promise<FlightLog[]>;
+  createFlightLog(flightLog: InsertFlightLog): Promise<FlightLog>;
+  updateFlightLog(id: number, flightLog: Partial<FlightLog>): Promise<FlightLog | undefined>;
+  deleteFlightLog(id: number): Promise<boolean>;
 }
 
 // PostgreSQL implementation of the storage interface

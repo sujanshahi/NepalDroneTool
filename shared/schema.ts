@@ -26,6 +26,7 @@ export const flightPlans = pgTable("flight_plans", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   name: text("name").notNull(),
+  category: text("category").default("Basic"), // Micro, Basic, Advanced
   createdAt: text("created_at").notNull(), // ISO date string
   updatedAt: text("updated_at").notNull(), // ISO date string
   step: integer("step").notNull(),
@@ -33,11 +34,16 @@ export const flightPlans = pgTable("flight_plans", {
   location: jsonb("location"), // JSON object with location data
   flight: jsonb("flight"), // JSON object with flight details
   results: jsonb("results"), // JSON object with flight results
+  path: jsonb("path"), // GeoJSON object with flight path (polyline or polygon)
+  pilotLocation: jsonb("pilot_location"), // Coordinates of the pilot's location
+  notes: text("notes"), // Additional notes
+  status: text("status").default("draft"), // draft, planned, completed, cancelled
 });
 
 export const insertFlightPlanSchema = createInsertSchema(flightPlans).pick({
   userId: true,
   name: true,
+  category: true,
   createdAt: true,
   updatedAt: true,
   step: true,
@@ -45,6 +51,10 @@ export const insertFlightPlanSchema = createInsertSchema(flightPlans).pick({
   location: true,
   flight: true,
   results: true,
+  path: true,
+  pilotLocation: true,
+  notes: true,
+  status: true,
 });
 
 // Airspace zones schema - for storing Nepal's airspace restrictions
@@ -128,3 +138,40 @@ export const insertAircraftSchema = createInsertSchema(aircraft).pick({
 
 export type InsertAircraft = z.infer<typeof insertAircraftSchema>;
 export type Aircraft = typeof aircraft.$inferSelect;
+
+// Flight Logs schema - for tracking completed drone flights
+export const flightLogs = pgTable("flight_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  flightPlanId: integer("flight_plan_id").references(() => flightPlans.id),
+  aircraftId: integer("aircraft_id").references(() => aircraft.id).notNull(),
+  pilotName: text("pilot_name").notNull(), // Pilot in command
+  observers: jsonb("observers"), // Array of observer names
+  startTime: text("start_time").notNull(), // ISO date string
+  endTime: text("end_time").notNull(), // ISO date string
+  duration: integer("duration"), // Duration in minutes
+  weatherConditions: text("weather_conditions"),
+  flightTrack: jsonb("flight_track"), // Array of coordinates representing actual flight path
+  notes: text("notes"), // Mission notes, incidents, etc.
+  attachments: jsonb("attachments"), // Array of attachment URLs/filenames
+  createdAt: text("created_at").notNull().default(new Date().toISOString()),
+  updatedAt: text("updated_at").notNull().default(new Date().toISOString()),
+});
+
+export const insertFlightLogSchema = createInsertSchema(flightLogs).pick({
+  userId: true,
+  flightPlanId: true,
+  aircraftId: true,
+  pilotName: true,
+  observers: true,
+  startTime: true,
+  endTime: true,
+  duration: true,
+  weatherConditions: true,
+  flightTrack: true,
+  notes: true,
+  attachments: true,
+});
+
+export type InsertFlightLog = z.infer<typeof insertFlightLogSchema>;
+export type FlightLog = typeof flightLogs.$inferSelect;
