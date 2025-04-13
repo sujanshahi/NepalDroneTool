@@ -15,6 +15,7 @@ import FlightPlanNewPage from "@/pages/flight-plan-new-page";
 import FlightPlanEditPage from "@/pages/flight-plan-edit-page";
 import FlightLogsPage from "@/pages/flight-logs-page";
 import FlightLogNewPage from "@/pages/flight-log-new-page";
+import FlightLogViewPage from "@/pages/flight-log-view-page";
 import FlightLogEditPage from "@/pages/flight-log-edit-page";
 import { FlightPlanProvider } from "./context/FlightPlanContext";
 import { AuthProvider } from "./hooks/use-auth";
@@ -34,9 +35,10 @@ function Router() {
       <ProtectedRoute path="/flight-plans/:id" component={FlightPlanEditPage} />
       
       {/* Flight Log Routes */}
-      <ProtectedRoute path="/flight-logs" component={FlightLogsPage} />
       <ProtectedRoute path="/flight-logs/new" component={FlightLogNewPage} />
       <ProtectedRoute path="/flight-logs/:id/edit" component={FlightLogEditPage} />
+      <ProtectedRoute path="/flight-logs/:id" component={FlightLogViewPage} />
+      <ProtectedRoute path="/flight-logs" component={FlightLogsPage} />
       
       <Route path="/auth" component={AuthPage} />
       <Route path="/regulations" component={RegulationsPage} />
