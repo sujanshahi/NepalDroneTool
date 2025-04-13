@@ -43,9 +43,11 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* Popup styling */
 .leaflet-popup-content-wrapper {
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 0;
 }
 
 .leaflet-popup-content {
@@ -57,6 +59,28 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+/* Tooltip styling */
+.custom-tooltip {
+  background: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  transform: translateY(-8px);
+}
+
+.custom-tooltip::before {
+  border-top-color: white;
+}
+
+.tooltip-content {
+  text-align: center;
+}
+
+/* Controls styling */
 .leaflet-control-zoom a {
   color: #333;
   background-color: white;
@@ -77,6 +101,23 @@
 
 .leaflet-control-layers-toggle {
   background-color: white !important;
+}
+
+/* Basemap selection styling */
+.leaflet-control-layers-expanded {
+  padding: 8px 10px 8px 10px;
+  background: white;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  border: none !important;
+}
+
+.leaflet-control-layers-selector {
+  margin-right: 6px;
+}
+
+.leaflet-control-layers-separator {
+  margin: 8px 0;
 }
 
 /* Side panel styling to prevent overlap */

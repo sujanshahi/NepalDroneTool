@@ -99,7 +99,49 @@ export const createZoneCircle = (
     stroke: true,
     weight: 1.5,
     opacity: 0.7,
-    fillOpacity: 0.25
+    fillOpacity: 0.25,
+    interactive: true
+  });
+
+  // Create the tooltip content based on zone type
+  let tooltipContent = '';
+  
+  if (zone.type === 'restricted') {
+    tooltipContent = `
+      <div class="tooltip-content">
+        <strong>${zone.name}</strong><br>
+        <span class="text-red-600 font-medium">Restricted Airspace</span>
+      </div>
+    `;
+  } else if (zone.type === 'controlled') {
+    tooltipContent = `
+      <div class="tooltip-content">
+        <strong>${zone.name}</strong><br>
+        <span class="text-orange-600 font-medium">Controlled Airspace</span>
+      </div>
+    `;
+  } else if (zone.type === 'advisory') {
+    tooltipContent = `
+      <div class="tooltip-content">
+        <strong>${zone.name}</strong><br>
+        <span class="text-blue-600 font-medium">Advisory Area</span>
+      </div>
+    `;
+  } else {
+    tooltipContent = `
+      <div class="tooltip-content">
+        <strong>${zone.name}</strong><br>
+        <span class="text-green-600 font-medium">Open Airspace</span>
+      </div>
+    `;
+  }
+  
+  // Add tooltip for hover effect
+  circle.bindTooltip(tooltipContent, {
+    direction: 'top',
+    sticky: true,
+    opacity: 0.9,
+    className: 'custom-tooltip'
   });
   
   // Add pulse effect for restricted zones
@@ -122,23 +164,38 @@ export const createZoneCircle = (
     // Create a layer group with both circles
     const group = L.layerGroup([circle, pulseCircle]);
     
-    // Add popup to the main circle
+    // Add popup to the main circle for click events
     circle.bindPopup(`
-      <div class="text-sm">
-        <h3 class="font-medium">${zone.name}</h3>
-        <p>${zone.description}</p>
-        <p class="text-xs mt-1 font-bold text-red-600">${zone.type.toUpperCase()} - NO DRONE ZONE</p>
+      <div class="text-sm p-1">
+        <h3 class="font-bold text-gray-800 mb-1">${zone.name}</h3>
+        <p class="text-sm text-gray-600 mb-2">${zone.description}</p>
+        <p class="text-xs font-bold text-red-600 border-t pt-1">RESTRICTED AIRSPACE - NO DRONE ZONE</p>
       </div>
     `);
     
     return group;
   }
   
+  // Add popup to circles that are not restricted
+  let statusText = '';
+  let statusClass = '';
+  
+  if (zone.type === 'controlled') {
+    statusText = 'CONTROLLED AIRSPACE - PERMISSION REQUIRED';
+    statusClass = 'text-orange-600';
+  } else if (zone.type === 'advisory') {
+    statusText = 'ADVISORY AREA - SPECIAL CONDITIONS APPLY';
+    statusClass = 'text-blue-600';
+  } else {
+    statusText = 'OPEN AIRSPACE - STANDARD REGULATIONS APPLY';
+    statusClass = 'text-green-600';
+  }
+  
   circle.bindPopup(`
-    <div class="text-sm">
-      <h3 class="font-medium">${zone.name}</h3>
-      <p>${zone.description}</p>
-      <p class="text-xs mt-1 font-bold">${zone.type.toUpperCase()}</p>
+    <div class="text-sm p-1">
+      <h3 class="font-bold text-gray-800 mb-1">${zone.name}</h3>
+      <p class="text-sm text-gray-600 mb-2">${zone.description}</p>
+      <p class="text-xs font-bold ${statusClass} border-t pt-1">${statusText}</p>
     </div>
   `);
   

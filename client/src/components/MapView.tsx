@@ -38,6 +38,19 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
   const [isFullScreen, setIsFullScreen] = useState(false);
   
   // Initialize map on component mount
+  // Get the basemap parameter from URL
+  const getUrlBasemap = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('basemap');
+  };
+  
+  // Keep track of the currently active basemap layers
+  const basemapLayersRef = useRef<{
+    map: L.TileLayer;
+    satellite: L.TileLayer;
+    terrain: L.TileLayer;
+  } | null>(null);
+  
   useEffect(() => {
     if (!mapRef.current) {
       // Create map instance
@@ -48,7 +61,7 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
       });
       
       // Add multiple tile layers for basemaps and add layer controls
-      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      const mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
       });
@@ -58,19 +71,28 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
         maxZoom: 19
       });
       
-      const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-        maxZoom: 17
+      const terrainLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        subdomains: 'abcd',
+        maxZoom: 18
       });
       
-      // Set default basemap
-      osmLayer.addTo(map);
+      // Set the basemap based on URL parameter
+      const urlBasemap = getUrlBasemap();
+      if (urlBasemap === 'satellite') {
+        satelliteLayer.addTo(map);
+      } else if (urlBasemap === 'terrain') {
+        terrainLayer.addTo(map);
+      } else {
+        // Default to map layer
+        mapLayer.addTo(map);
+      }
       
       // Add basemap controls to top right
       const baseMaps = {
-        "Street": osmLayer,
+        "Map": mapLayer,
         "Satellite": satelliteLayer,
-        "Topographic": topoLayer
+        "Terrain": terrainLayer
       };
       
       L.control.layers(baseMaps, {}, {position: 'topright'}).addTo(map);
