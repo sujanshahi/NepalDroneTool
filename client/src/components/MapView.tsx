@@ -728,6 +728,15 @@ const MapView: React.FC<{ onOpenInfoDrawer: (zone?: AirspaceZone) => void }> = (
             />
             <span className="text-gray-800 font-medium">Selected Location</span>
           </div>
+          
+          <div className="flex items-center px-2 py-1 bg-gray-50 rounded-md">
+            <div className="w-4 h-4 mr-2 rounded-full" style={{ 
+              backgroundColor: '#1E90FF', 
+              border: '1px solid #1E90FF',
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.05)' 
+            }}></div>
+            <span className="text-gray-800 font-medium">Your Location</span>
+          </div>
         </div>
       </div>
     </div>

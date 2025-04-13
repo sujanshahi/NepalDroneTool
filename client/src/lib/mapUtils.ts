@@ -169,8 +169,10 @@ export const createZoneCircle = (
   // Add pulse effect for restricted zones
   if (zone.type === 'restricted') {
     // Create pulse circle effect
-    const pulseCircle = L.circle(center, radius + 50, {
-      ...ZONE_STYLES[zone.type],
+    const pulseCircle = L.circle(center, {
+      radius: radius + 50,
+      color: ZONE_STYLES[zone.type].color,
+      fillColor: ZONE_STYLES[zone.type].fillColor,
       fillOpacity: 0,
       weight: 3,
       opacity: 0.3,
