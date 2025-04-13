@@ -108,9 +108,19 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 border-[#003893]">
+              <TabsTrigger 
+                value="login" 
+                className="data-[state=active]:bg-[#003893] data-[state=active]:text-white focus:ring-[#003893]"
+              >
+                Login
+              </TabsTrigger>
+              <TabsTrigger 
+                value="register" 
+                className="data-[state=active]:bg-[#003893] data-[state=active]:text-white focus:ring-[#003893]"
+              >
+                Register
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
@@ -154,7 +164,7 @@ export default function AuthPage() {
                       
                       <Button 
                         type="submit" 
-                        className="w-full"
+                        className="w-full bg-[#003893] hover:bg-[#002f7c]"
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -172,7 +182,7 @@ export default function AuthPage() {
                 <CardFooter className="flex justify-center">
                   <p className="text-sm text-muted-foreground">
                     Don't have an account?{" "}
-                    <Button variant="link" className="p-0" onClick={() => setActiveTab("register")}>
+                    <Button variant="link" className="p-0 text-[#003893]" onClick={() => setActiveTab("register")}>
                       Register
                     </Button>
                   </p>
@@ -272,7 +282,7 @@ export default function AuthPage() {
                       
                       <Button 
                         type="submit" 
-                        className="w-full"
+                        className="w-full bg-[#003893] hover:bg-[#002f7c]"
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
@@ -290,7 +300,7 @@ export default function AuthPage() {
                 <CardFooter className="flex justify-center">
                   <p className="text-sm text-muted-foreground">
                     Already have an account?{" "}
-                    <Button variant="link" className="p-0" onClick={() => setActiveTab("login")}>
+                    <Button variant="link" className="p-0 text-[#003893]" onClick={() => setActiveTab("login")}>
                       Login
                     </Button>
                   </p>
@@ -302,7 +312,7 @@ export default function AuthPage() {
       </div>
       
       {/* Hero Section */}
-      <div className="flex-1 bg-primary p-10 flex flex-col justify-center text-white hidden md:flex">
+      <div className="flex-1 bg-[#003893] p-10 flex flex-col justify-center text-white hidden md:flex">
         <div className="max-w-lg mx-auto">
           <h1 className="text-4xl font-bold mb-6">Nepal Drone Flight Planner</h1>
           <p className="text-xl mb-8">
