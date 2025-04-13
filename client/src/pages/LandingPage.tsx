@@ -105,7 +105,7 @@ const LandingPage: React.FC = () => {
             <Button 
               size="lg" 
               className="bg-red-600 hover:bg-red-700 text-white px-8"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/map')}
             >
               Get Started
             </Button>
@@ -127,8 +127,8 @@ const LandingPage: React.FC = () => {
                 <div className="text-center">
                   <Button 
                     variant="link" 
-                    className="text-blue-600 inline-flex items-center"
-                    onClick={() => navigate('/')} // Using home for now as these pages don't exist yet
+                    className="text-[#003893] inline-flex items-center"
+                    onClick={() => navigate('/regulations')}
                   >
                     Learn more <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
@@ -149,8 +149,8 @@ const LandingPage: React.FC = () => {
           
           <div className="bg-gray-100 rounded-lg p-4 flex justify-center items-center h-64">
             <Button 
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={() => navigate('/')}
+              className="bg-[#003893] hover:bg-blue-800"
+              onClick={() => navigate('/map')}
             >
               Open Interactive Map
             </Button>
@@ -259,11 +259,51 @@ const LandingPage: React.FC = () => {
             <div>
               <h3 className="text-lg font-medium mb-4">Quick Links</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-gray-300 hover:text-white">Home</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Drone Registration</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Regulations</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">FAQ</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Contact Us</a></li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/'); }}
+                  >
+                    Home
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/my-aircraft'); }}
+                  >
+                    Register Your Drone
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/regulations'); }}
+                  >
+                    Regulations
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/map'); }}
+                  >
+                    Interactive Map
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/about'); }}
+                  >
+                    About
+                  </a>
+                </li>
               </ul>
             </div>
             
@@ -271,9 +311,33 @@ const LandingPage: React.FC = () => {
               <h3 className="text-lg font-medium mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
                 <li><a href="https://caanepal.gov.np" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white">Civil Aviation Authority of Nepal</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Drone Regulations Guide</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Restricted Areas Map</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-white">Training Resources</a></li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/regulations'); }}
+                  >
+                    Drone Regulations Guide
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/map'); }}
+                  >
+                    Restricted Areas Map
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="#" 
+                    className="text-gray-300 hover:text-white"
+                    onClick={(e) => { e.preventDefault(); navigate('/about'); }}
+                  >
+                    About Us
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

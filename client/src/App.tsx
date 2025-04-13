@@ -8,6 +8,8 @@ import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile-page";
 import AircraftPage from "@/pages/aircraft-page";
 import LandingPage from "@/pages/LandingPage";
+import RegulationsPage from "@/pages/RegulationsPage";
+import AboutPage from "@/pages/AboutPage";
 import { FlightPlanProvider } from "./context/FlightPlanContext";
 import { AuthProvider } from "./hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -20,6 +22,8 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/my-aircraft" component={AircraftPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/regulations" component={RegulationsPage} />
+      <Route path="/about" component={AboutPage} />
       <Route component={NotFound} />
     </Switch>
   );
