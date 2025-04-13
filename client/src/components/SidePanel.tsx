@@ -468,7 +468,19 @@ const SidePanel: React.FC = () => {
   
   // Render results step content
   const renderResultsContent = () => {
+    // Debug the state of the flight plan results
+    console.log("Rendering results content, flightPlan:", flightPlan);
+    
+    // Check if results are missing or still being generated
     if (!flightPlan.results) {
+      console.log("No results available, showing loading state");
+      
+      // Force results generation again if we're on this step but have no results
+      if (flightPlan.step === 4 && flightPlan.intent && flightPlan.location && flightPlan.flight) {
+        console.log("Regenerating results as we're on step 4 with all required data");
+        setTimeout(() => generateResults(), 100); // Try regenerating results
+      }
+      
       return (
         <div className="text-center py-8">
           <div className="animate-pulse flex flex-col items-center">
@@ -477,9 +489,12 @@ const SidePanel: React.FC = () => {
             <div className="h-4 w-64 bg-gray-300 rounded"></div>
           </div>
           <p className="text-gray-500 mt-4">Generating your flight assessment...</p>
+          <p className="text-xs text-gray-400 mt-2">This may take a few moments</p>
         </div>
       );
     }
+    
+    console.log("Results available, rendering assessment");
     
     return (
       <>
